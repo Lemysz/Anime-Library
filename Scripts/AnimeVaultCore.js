@@ -11,7 +11,7 @@
 class AnimeVaultCore {
 
 	constructor() {
-		this.VERSION = "1.0.0";
+		this.VERSION = "1.1.0";
 
 		this.folders = {
 			anime: "Animes", lists: "Lists", genres: "Genres", studios: "Studios", franchises: "Franchises",
@@ -26,6 +26,23 @@ class AnimeVaultCore {
 			Planning:   { label: "Quero assistir", tone: "muted",  order: 3, icon: "bookmark" },
 			Completed:  { label: "Concluído",      tone: "green",  order: 4, icon: "check" },
 			Dropped:    { label: "Abandonado",     tone: "red",    order: 5, icon: "x" }
+		};
+		// como o MyAnimeList chama e colore cada status (lista em tabela, perfil, XML)
+		this.malStatus = {
+			Watching:   { mal: "Watching",      label: "Assistindo",     color: "#2db039" },
+			Rewatching: { mal: "Watching",      label: "Reassistindo",   color: "#2db039" },
+			Completed:  { mal: "Completed",     label: "Concluído",      color: "#26448f" },
+			Paused:     { mal: "On-Hold",       label: "Em espera",      color: "#f9d457" },
+			Dropped:    { mal: "Dropped",       label: "Abandonado",     color: "#a12f31" },
+			Planning:   { mal: "Plan to Watch", label: "Planejo assistir", color: "#c3c3c3" }
+		};
+		this.malStatusIn = { "watching": "Watching", "completed": "Completed", "on-hold": "Paused", "on hold": "Paused", "dropped": "Dropped", "plan to watch": "Planning", "1": "Watching", "2": "Completed", "3": "Paused", "4": "Dropped", "6": "Planning" };
+		// a escala de 10 do MyAnimeList (nota interna 0–5 em meias estrelas = 0–10)
+		this.malScores = { 10: "Obra-prima", 9: "Ótimo", 8: "Muito bom", 7: "Bom", 6: "Razoável", 5: "Mediano", 4: "Ruim", 3: "Muito ruim", 2: "Horrível", 1: "Péssimo" };
+		this.sourceNames = {
+			ORIGINAL: "Original", MANGA: "Mangá", LIGHT_NOVEL: "Light novel", VISUAL_NOVEL: "Visual novel", VIDEO_GAME: "Videogame",
+			NOVEL: "Livro", WEB_NOVEL: "Web novel", WEB_MANGA: "Web mangá", "4_KOMA_MANGA": "Mangá 4-koma", DOUJINSHI: "Doujinshi",
+			ANIME: "Anime", LIVE_ACTION: "Live action", GAME: "Jogo", COMIC: "Quadrinho", MULTIMEDIA_PROJECT: "Projeto multimídia", PICTURE_BOOK: "Livro ilustrado", OTHER: "Outro"
 		};
 		this.statusAliases = {
 			watching: "Watching", current: "Watching", assistindo: "Watching", playing: "Watching",
@@ -266,6 +283,13 @@ class AnimeVaultCore {
 	}
 
 	genreLabel(g) { return this.genreNames[g] || g; }
+	sourceLabel(v) { const k = this.str(v).toUpperCase().replace(/[\s-]+/g, "_"); return this.sourceNames[k] || this.str(v); }
+
+	// escala de notas escolhida em Configurações: "5" (estrelas) ou "10" (MyAnimeList)
+	scale() { try { return localStorage.getItem("animevault:ui:scale") === "10" ? 10 : 5; } catch (_) { return 5; } }
+	score10(rating) { return Math.round((Number(rating) || 0) * 2); }
+	fromScore10(n) { const v = Math.max(0, Math.min(10, Math.round(Number(n) || 0))); return v / 2; }
+	malStatusOf(status) { return this.malStatus[status] || this.malStatus.Planning; }
 
 	normalizeWeekday(v) {
 		const k = this.normalizeKey(v).split(" ")[0];
@@ -379,7 +403,16 @@ class AnimeVaultCore {
 			nextAiring: { episode: this.num(na.episode), at: this.isoDateTime(na.at) },
 			anilistId: this.str(p.anilistId), malId: this.str(p.malId),
 			score: this.num(p.averageScore),
-			anilist: { lastSync: this.isoDateTime(al.lastSync), status: this.str(al.syncStatus), error: this.str(al.syncError) },
+			anilist: {
+				lastSync: this.isoDateTime(al.lastSync), status: this.str(al.syncStatus), error: this.str(al.syncError),
+				popularity: this.num(al.popularity), favourites: this.num(al.favourites), rank: this.num(al.rank), popularRank: this.num(al.popularRank)
+			},
+			// estatísticas públicas do MyAnimeList (Jikan), escritas pelo app
+			mal: (() => { const m = (p.mal && typeof p.mal === "object") ? p.mal : {}; return {
+				score: this.num(m.score), scoredBy: this.num(m.scoredBy), rank: this.num(m.rank), popularity: this.num(m.popularity),
+				members: this.num(m.members), favorites: this.num(m.favorites), lastSync: this.isoDateTime(m.lastSync), status: this.str(m.syncStatus) }; })(),
+			source: this.str(p.source), demographic: this.strList(p.demographic), themes: this.strList(p.themes),
+			producers: this.strList(p.producers), ageRating: this.str(p.ageRating), broadcast: this.str(p.broadcast),
 			dateAdded: this.iso(p.dateAdded), startDate: this.iso(p.startDate), completionDate: this.iso(p.completionDate),
 			lastWatchedField: this.iso(p.lastWatched),
 			rewatches: Math.max(0, this.num(p.rewatches) || 0),
@@ -457,7 +490,9 @@ class AnimeVaultCore {
 			completed: byStatus.Completed, watching: byStatus.Watching + byStatus.Rewatching,
 			favorites: list.filter(a => a.favorite).length,
 			movies: list.filter(a => a.format === "MOVIE").length,
-			avgRating: rated.length ? Math.round((sum(rated, a => a.rating) / rated.length) * 10) / 10 : null
+			avgRating: rated.length ? Math.round((sum(rated, a => a.rating) / rated.length) * 10) / 10 : null,
+			rewatched: sum(list, a => a.rewatches),
+			firstAdded: list.map(a => a.dateAdded).filter(Boolean).sort()[0] || ""
 		};
 	}
 
@@ -584,6 +619,7 @@ class AnimeVaultCore {
 			["franchise", ""], ["franchiseOrder", ""], ["tier", ""], ["tierOrder", ""],
 			["summary", ""], ["cover", ""], ["banner", ""], ["bgPosX", 50], ["bgPosY", 30], ["accent", ""], ["featuredOnHome", false],
 			["anilistId", ""], ["malId", ""], ["averageScore", ""], ["link", ""],
+			["source", ""], ["demographic", []], ["themes", []], ["producers", []], ["ageRating", ""], ["broadcast", ""],
 			["dateAdded", "__TODAY__"], ["startDate", ""], ["completionDate", ""], ["lastWatched", ""], ["rewatches", 0],
 			["log", []], ["review", ""], ["pros", []], ["cons", []], ["notes", []],
 			["cssclasses", ["animevault", "av-anime"]]

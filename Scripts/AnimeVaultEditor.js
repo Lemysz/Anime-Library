@@ -206,7 +206,9 @@ class AnimeVaultEditor {
 				${this._field("Começou", this._text("startDate", a.startDate, { type: "date" }))}
 				${this._field("Concluiu", this._text("completionDate", a.completionDate, { type: "date" }))}
 				${this._field("Reassistido (vezes)", this._text("rewatches", a.rewatches, { type: "number", attrs: 'min="0" inputmode="numeric"' }))}
-				${this._field("Nota (0–5)", this._text("rating", a.rating || "", { type: "number", attrs: 'min="0" max="5" step="0.5" inputmode="decimal"' }))}
+				${C.scale() === 10 ? this._field("Nota (1–10)", `<select class="av-select" name="rating10">${[["0", "—"], ...[10, 9, 8, 7, 6, 5, 4, 3, 2, 1].map(n => [String(n), `(${n}) ${C.malScores[n]}`])].map(([v, l]) => `<option value="${v}"${String(C.score10(a.rating)) === v ? " selected" : ""}>${U.esc(l)}</option>`).join("")}</select>`) : this._field("Nota (0–5)", this._text("rating", a.rating || "", { type: "number", attrs: 'min="0" max="5" step="0.5" inputmode="decimal"' }))}
+				${this._field("Fonte", this._text("source", a.source, { placeholder: "Mangá, Light novel, Original…" }))}
+				${this._field("Demografia", this._text("demographic", a.demographic.join(", "), { placeholder: "Shounen, Seinen…" }))}
 			</div></fieldset>
 			<fieldset class="av-fieldset"><legend>Exibição</legend><div class="av-formgrid">
 				${this._field("Temporada", this._select("season", [["", "—"], ...Object.entries(C.seasonDefs).map(([k, v]) => [k, v.label])], a.season))}
@@ -244,7 +246,8 @@ class AnimeVaultEditor {
 					set("format", v.format); set("status", v.status); set("anilistId", v.anilistId.replace(/\D/g, "")); set("malId", v.malId.replace(/\D/g, ""));
 					set("episodesWatched", this._num(v.episodesWatched) || 0); set("episodes", this._num(v.episodes)); set("duration", this._num(v.duration) || 24);
 					set("startDate", v.startDate); set("completionDate", v.completionDate); set("rewatches", this._num(v.rewatches) || 0);
-					set("rating", Math.max(0, Math.min(5, this._num(v.rating) || 0)));
+					set("rating", v.rating10 !== undefined ? C.fromScore10(v.rating10) : Math.max(0, Math.min(5, this._num(v.rating) || 0)));
+					set("source", v.source); set("demographic", this._list(v.demographic));
 					set("season", v.season); set("seasonYear", this._num(v.seasonYear)); set("airingStatus", v.airingStatus); set("airingDay", v.airingDay); set("airingTime", v.airingTime); set("airedFrom", v.airedFrom);
 					set("genre", this._list(v.genre)); set("studio", this._list(v.studio));
 					set("tags", ["anime", ...this._list(v.tags).filter(t => t !== "anime")]);
@@ -330,8 +333,14 @@ class AnimeVaultEditor {
 
 	// ======================================================= ANÁLISE E NOTA
 	_starInput(host, initial, onChange) {
-		const U = customJS.AnimeVaultUI;
+		const U = customJS.AnimeVaultUI, C = customJS.AnimeVaultCore;
 		let v = initial;
+		// escala do MyAnimeList: seletor (10) Obra-prima … (1) Péssimo
+		if (C.scale() === 10) {
+			host.innerHTML = U.scoreSelect(v, "data-score-pick");
+			host.querySelector("select").addEventListener("change", e => { v = C.fromScore10(e.target.value); onChange(v); });
+			return;
+		}
 		const paint = () => { host.innerHTML = `${U.stars(v, { input: true })}<b>${v ? U.fmtNum(v, 1) : "Sem nota"}</b>${v ? `<button type="button" class="av-ovlink" data-clear>Limpar</button>` : ""}`; };
 		host.addEventListener("click", e => {
 			if (e.target.closest("[data-clear]")) { v = 0; paint(); onChange(v); return; }
@@ -353,10 +362,10 @@ class AnimeVaultEditor {
 		let v = a.rating;
 		const body = document.createElement("div");
 		body.className = "av-host av-rate";
-		body.innerHTML = `<div class="av-rate-head">${U.cover(a)}<div><strong>${U.esc(a.title)}</strong><span>Toque na metade esquerda da estrela para meia nota</span></div></div><div class="av-rate-stars" data-stars></div>`;
+		body.innerHTML = `<div class="av-rate-head">${U.cover(a)}<div><strong>${U.esc(a.title)}</strong><span>${customJS.AnimeVaultCore.scale() === 10 ? "Escala do MyAnimeList (1 a 10)" : "Toque na metade esquerda da estrela para meia nota"}</span></div></div><div class="av-rate-stars" data-stars></div>`;
 		const m = V.modal({ title: "Sua nota", size: "sm", body, actions: `${U.btn("Escrever análise", { kind: "ghost", attrs: "data-review" })}${U.btn("Salvar", { kind: "primary", attrs: "data-save" })}` });
 		this._starInput(body.querySelector("[data-stars]"), v, x => { v = x; });
-		m.el.querySelector("[data-save]").addEventListener("click", async () => { await app.fileManager.processFrontMatter(file, fm => { fm.rating = v; }); m.close(); V.toast(v ? `Nota ${U.fmtNum(v, 1)}` : "Nota removida", { tone: "ok", icon: "starFill" }); });
+		m.el.querySelector("[data-save]").addEventListener("click", async () => { await app.fileManager.processFrontMatter(file, fm => { fm.rating = v; }); m.close(); V.toast(v ? `Nota ${U.scoreText(v)}` : "Nota removida", { tone: "ok", icon: "starFill" }); });
 		m.el.querySelector("[data-review]").addEventListener("click", async () => { await app.fileManager.processFrontMatter(file, fm => { fm.rating = v; }); m.close(); this.editReview(ctx, path); });
 	}
 

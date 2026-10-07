@@ -38,6 +38,12 @@ anilistId: "112151"
 malId: "40456"
 averageScore: 84
 link: ""
+source: "Mangá"
+demographic: ["Shounen"]
+themes: []
+producers: []
+ageRating: ""
+broadcast: ""
 dateAdded: "2026-09-15"
 startDate: ""
 completionDate: ""

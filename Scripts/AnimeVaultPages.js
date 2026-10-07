@@ -164,7 +164,7 @@ class AnimeVaultPages {
 				${a.status !== "Rewatching" && (a.status === "Completed" || p.done) ? `<button role="menuitem" data-action="rewatch" data-path="${U.attr(a.path)}">${U.icon("repeat")}Reassistir</button>` : ""}
 				<div class="av-menu-sep"></div>
 				${a.anilistId ? `<button role="menuitem" data-action="anilist-refresh" data-path="${U.attr(a.path)}">${U.icon("refresh")}Atualizar do AniList</button><button role="menuitem" data-action="anilist-art" data-path="${U.attr(a.path)}">${U.icon("download")}Baixar capa e banner</button><a role="menuitem" href="https://anilist.co/anime/${U.attr(a.anilistId)}">${U.icon("external")}Página no AniList</a>` : `<button role="menuitem" data-action="edit" data-path="${U.attr(a.path)}" data-focus="anilist">${U.icon("link")}Ligar ao AniList</button>`}
-				${a.malId ? `<a role="menuitem" href="https://myanimelist.net/anime/${U.attr(a.malId)}">${U.icon("external")}Página no MyAnimeList</a>` : ""}
+				${a.malId ? `${ctx.MAL ? `<button role="menuitem" data-action="mal-refresh" data-path="${U.attr(a.path)}">${U.icon("b-mal")}Atualizar do MyAnimeList</button>` : ""}<a role="menuitem" href="https://myanimelist.net/anime/${U.attr(a.malId)}">${U.icon("external")}Página no MyAnimeList</a>` : ""}
 				${U.safeUrl(a.link) ? `<a role="menuitem" href="${U.attr(U.safeUrl(a.link))}">${U.icon("play")}Onde assistir</a>` : ""}
 				<div class="av-menu-sep"></div>
 				<button role="menuitem" class="is-danger" data-action="delete-anime" data-path="${U.attr(a.path)}">${U.icon("trash")}Excluir</button>
@@ -182,7 +182,7 @@ class AnimeVaultPages {
 					${variant === "home" ? `<span class="av-hero-kicker">${p.newEpisode ? "Novo episódio" : ["Watching", "Rewatching"].includes(a.status) ? "Continue de onde parou" : a.featuredOnHome ? "Em destaque" : a.status === "Planning" ? "Na sua lista" : "Da sua biblioteca"}</span>` : a.franchise ? `<a class="av-hero-kicker" ${U.catAttrs("franchise", a.franchise, model.franchises.find(x => C.normalizeKey(x.title) === C.normalizeKey(a.franchise)))}>${U.esc(a.franchise)}</a>` : ""}
 					<h1 class="av-hero-title">${variant === "home" ? `<a ${U.openAttrs(a.path)}>${U.esc(a.title)}</a>` : U.esc(a.title)}</h1>
 					${variant === "page" && (a.titleNative || (a.titleRomaji && a.titleRomaji !== a.title)) ? `<p class="av-hero-alt">${U.esc([a.titleRomaji !== a.title ? a.titleRomaji : "", a.titleNative].filter(Boolean).join(" · "))}</p>` : ""}
-					<div class="av-hero-meta">${a.rating ? `<span class="av-hero-rate">${U.stars(a.rating)}<b>${U.fmtNum(a.rating, 1)}</b></span>` : ""}${meta.map(m => `<span>${U.esc(m)}</span>`).join("")}${a.airing === "RELEASING" ? `<span class="av-hero-live">Em lançamento</span>` : ""}</div>
+					<div class="av-hero-meta">${a.rating ? `<span class="av-hero-rate">${U.score(a.rating)}${C.scale() === 10 ? "" : `<b>${U.fmtNum(a.rating, 1)}</b>`}</span>` : ""}${a.mal.score ? `<span class="av-hero-mal" title="Nota no MyAnimeList">MAL ${U.fmtNum(a.mal.score, 2)}</span>` : ""}${meta.map(m => `<span>${U.esc(m)}</span>`).join("")}${a.airing === "RELEASING" ? `<span class="av-hero-live">Em lançamento</span>` : ""}</div>
 					${a.summary ? `<p class="av-hero-sum">${U.esc(a.summary)}</p>` : ""}
 					${genreLinks ? `<div class="av-hero-genres">${genreLinks}</div>` : ""}
 					<div class="av-hero-actions">${primary}${fav}${variant === "page" ? `<button type="button" class="av-btn av-btn--ghost av-btn--lg av-btn--icon" data-action="list-edit" data-path="${U.attr(a.path)}" title="Adicionar a uma lista" aria-label="Adicionar a uma lista">${U.icon("plus")}</button>` : ""}${menu}</div>
@@ -220,11 +220,12 @@ class AnimeVaultPages {
 				<label class="av-field av-field--search">${U.icon("search")}<input type="search" class="av-input" data-lib-q placeholder="Buscar na biblioteca" aria-label="Buscar por título, estúdio, gênero ou franquia"></label>
 				<label class="av-select-wrap">${U.icon("sort")}<select class="av-select" data-lib-sort aria-label="Ordenar">${Object.entries(this._libSorts()).map(([k, v]) => `<option value="${k}"${st.sort === k ? " selected" : ""}>${U.esc(v)}</option>`).join("")}</select></label>
 				<button type="button" class="av-libbtn" data-lib-filters>${U.icon("filter")}<span>Filtros</span><b class="av-libbtn-badge" hidden>0</b></button>
-				<div class="av-viewtoggle" role="radiogroup" aria-label="Visualização"><button type="button" data-view="grid" title="Grade" aria-label="Grade">${U.icon("grid")}</button><button type="button" data-view="list" title="Lista" aria-label="Lista">${U.icon("list")}</button></div>
+				<div class="av-viewtoggle" role="radiogroup" aria-label="Visualização"><button type="button" data-view="grid" title="Grade" aria-label="Grade">${U.icon("grid")}</button><button type="button" data-view="list" title="Lista" aria-label="Lista">${U.icon("list")}</button><button type="button" data-view="mal" title="Tabela (estilo MyAnimeList)" aria-label="Tabela estilo MyAnimeList">${U.icon("table")}</button></div>
 			</div>
 			<div class="av-chips" data-lib-chips hidden></div>` : ""}
 			<div class="av-library" data-view="${U.attr(st.view)}">
 				<div class="av-grid">${list.map(a => U.animeCard(a, C).replace('<article class="av-card', `<article ${this._libAttrs(ctx, a)} class="av-card`)).join("")}</div>
+				<div class="av-maltable" hidden>${list.length ? `<div class="av-malrow av-malrow--head"><span>#</span><span>Imagem</span><span>Título</span><span>Nota</span><span>Tipo</span><span>Progresso</span></div>` : ""}${list.map((a, i) => U.malRow(a, C, i + 1)).join("")}</div>
 				<div class="av-list" hidden>${list.length ? `<div class="av-row av-row--head"><span></span><span>Título</span><span>Status</span><span>Progresso</span><span>Tempo</span><span>Nota</span></div>` : ""}${list.map(a => U.animeRow(a, C)).join("")}</div>
 				${list.length ? "" : U.empty({ icon: "bookmark", title: "Nenhum anime ainda", text: "Busque no AniList e adicione: capa, episódios e gêneros chegam sozinhos.", action: U.btn("Adicionar anime", { icon: "plus", kind: "primary", action: "add-anime" }) })}
 				<div class="av-noresults" hidden>${U.empty({ icon: "search", title: "Nada encontrado", text: "Tente outro termo, outra aba ou limpe os filtros.", action: U.btn("Limpar filtros", { attrs: "data-lib-clear" }) })}</div>
@@ -267,6 +268,9 @@ class AnimeVaultPages {
 		const grid = lib.querySelector(".av-grid"), rowsBox = lib.querySelector(".av-list"), none = lib.querySelector(".av-noresults");
 		const cards = [...grid.querySelectorAll(".av-card")];
 		const rowOf = new Map([...rowsBox.querySelectorAll(".av-row[data-anime]")].map(r => [r.dataset.anime, r]));
+		const malBox = lib.querySelector(".av-maltable");
+		const malOf = new Map([...malBox.querySelectorAll(".av-malrow[data-anime]")].map(r => [r.dataset.anime, r]));
+		const statusOf = new Map(list.map(a => [a.path, a.status]));
 		const st = this._libState(ctx);
 		const save = () => { const { q, ...rest } = st; U._store("library", JSON.stringify(rest)); };
 		const genreLabel = new Map(), studioLabel = new Map();
@@ -312,14 +316,25 @@ class AnimeVaultPages {
 			for (const c of vis) { c.hidden = false; gf.appendChild(c); const r = rowOf.get(c.dataset.anime); if (r) { r.hidden = false; rf.appendChild(r); } }
 			for (const c of hid) { c.hidden = true; gf.appendChild(c); const r = rowOf.get(c.dataset.anime); if (r) { r.hidden = true; rf.appendChild(r); } }
 			grid.appendChild(gf); rowsBox.appendChild(rf);
+			// tabela do MAL: em "Todos", seções por status com a cor de cada um
+			malBox.querySelectorAll(".av-malgroup").forEach(x => x.remove());
+			const mf = document.createDocumentFragment();
+			const order = ["Watching", "Rewatching", "Completed", "Paused", "Dropped", "Planning"];
+			const groups = st.tab === "all" ? order.map(k => [k, vis.filter(c => statusOf.get(c.dataset.anime) === k)]).filter(([, l]) => l.length) : [["", vis]];
+			for (const [k, items] of groups) {
+				if (k) { const h = document.createElement("div"); h.className = "av-malgroup"; h.style.setProperty("--av-ms", C.malStatus[k].color); h.innerHTML = `<span>${U.esc(C.statusLabel(k))}</span><small>${items.length}</small>`; mf.appendChild(h); }
+				items.forEach((c, i) => { const r = malOf.get(c.dataset.anime); if (r) { r.hidden = false; r.querySelector(".av-malrow-n").textContent = String(i + 1); mf.appendChild(r); } });
+			}
+			for (const c of hid) { const r = malOf.get(c.dataset.anime); if (r) { r.hidden = true; mf.appendChild(r); } }
+			malBox.appendChild(mf);
 			none.hidden = vis.length > 0 || !cards.length;
 			paintChips(vis.length);
 			save();
 		};
 		const setView = v => {
-			st.view = v === "list" ? "list" : "grid";
+			st.view = ["list", "mal"].includes(v) ? v : "grid";
 			lib.dataset.view = st.view;
-			grid.hidden = st.view === "list"; rowsBox.hidden = st.view !== "list";
+			grid.hidden = st.view !== "grid"; rowsBox.hidden = st.view !== "list"; malBox.hidden = st.view !== "mal";
 			page.querySelectorAll(".av-viewtoggle [data-view]").forEach(b => { const on = b.dataset.view === st.view; b.classList.toggle("is-active", on); b.setAttribute("aria-checked", String(on)); });
 			save();
 		};
@@ -391,8 +406,9 @@ class AnimeVaultPages {
 		const tabs = [
 			{ id: "episodes", label: C.isMovie(a) ? "Filme" : "Episódios", count: C.isMovie(a) ? null : a.episodes },
 			{ id: "details", label: "Detalhes" },
+			a.anilistId ? { id: "characters", label: "Personagens" } : null,
 			{ id: "diary", label: "Diário", count: a.log.length || null },
-			related.count ? { id: "related", label: "Relacionados", count: related.count } : null
+			related.count || related.remote ? { id: "related", label: "Relacionados", count: related.count || null } : null
 		].filter(Boolean);
 		const html = `<div class="av-page av-page--anime" data-anime="${U.attr(a.path)}">
 			${this.animeHero(ctx, a)}
@@ -400,8 +416,9 @@ class AnimeVaultPages {
 			<div class="av-pad av-animebody">
 				<div class="av-panel" data-panel="episodes">${this._episodes(ctx, a)}</div>
 				<div class="av-panel" data-panel="details" hidden>${this._details(ctx, a)}</div>
+				${a.anilistId ? `<div class="av-panel" data-panel="characters" hidden>${this._characters(ctx, a)}</div>` : ""}
 				<div class="av-panel" data-panel="diary" hidden>${this._diary(ctx, a)}</div>
-				${related.count ? `<div class="av-panel" data-panel="related" hidden>${related.html}</div>` : ""}
+				${related.count || related.remote ? `<div class="av-panel" data-panel="related" hidden>${related.html}</div>` : ""}
 			</div>
 		</div>`;
 		return {
@@ -410,6 +427,7 @@ class AnimeVaultPages {
 					root.querySelectorAll(".av-tabs--anime .av-tab").forEach(t => { const on = t.dataset.tab === id; t.classList.toggle("is-active", on); t.setAttribute("aria-selected", String(on)); });
 					root.querySelectorAll(".av-panel").forEach(p => { p.hidden = p.dataset.panel !== id; });
 					window.__avAnimeTab = { path: a.path, id };
+					if ((id === "characters" || id === "related") && !root.__avExtra) { root.__avExtra = true; ctx.AL?.fillExtras?.(ctx, root, a).catch(() => {}); }
 				};
 				root.querySelectorAll(".av-tabs--anime .av-tab").forEach(t => t.addEventListener("click", () => { show(t.dataset.tab); ctx.V._haptic(6); }));
 				root.querySelectorAll("[data-goto-tab]").forEach(b => b.addEventListener("click", () => { show(b.dataset.gotoTab); root.querySelector(".av-animenav")?.scrollIntoView({ block: "start", behavior: ctx.V._smooth() }); }));
@@ -551,61 +569,95 @@ class AnimeVaultPages {
 		}).catch(() => {});
 	}
 
-	// ---- detalhes: sinopse, análise, ficha técnica, painel lateral
+	// ---- detalhes: barra de notas e "Informações / Estatísticas" do MyAnimeList,
+	// sinopse, análise e a história com o anime
 	_details(ctx, a) {
 		const { C, U, model } = ctx;
 		const find = (list, name) => list.find(x => C.normalizeKey(x.title) === C.normalizeKey(name)) || null;
-		const chip = (kind, name, list, icon, label = name) => `<a class="av-chiplink" ${U.catAttrs(kind, name, find(list, name))}>${U.icon(icon)}${U.esc(label)}</a>`;
-		const airDates = [a.airedFrom ? U.fmtDate(a.airedFrom) : "", a.airedTo && a.airedTo !== a.airedFrom ? U.fmtDate(a.airedTo) : a.airing === "RELEASING" ? "hoje" : ""].filter(Boolean).join(" – ");
-		const facts = [
-			["Formato", "tv", U.esc(a.formatLabel)],
-			!C.isMovie(a) && ["Episódios", "list", a.episodes ? `${a.episodes} × ${a.duration} min` : `? × ${a.duration} min`],
-			C.isMovie(a) && ["Duração", "clock", U.esc(U.fmtMinutes(a.duration))],
-			a.season && ["Temporada", "calendar", `<a class="av-chiplink" data-season="${U.attr(a.season)}" data-year="${U.attr(a.seasonYear || "")}" href="#">${U.icon(C.seasonDefs[a.season]?.icon || "calendar")}${U.esc(C.seasonLabel(a.season, a.seasonYear))}</a>`],
-			a.studios.length && ["Estúdio", "building", a.studios.map(s => chip("studio", s, model.studios, "building")).join("")],
-			a.genres.length && ["Gêneros", "masks", a.genres.map(g => chip("genre", g, model.genres, ctx.B?.ident ? ctx.B.ident(ctx, "genre", g).icon : "masks", C.genreLabel(g))).join("")],
-			a.franchise && ["Franquia", "film", chip("franchise", a.franchise, model.franchises, "film")],
-			a.airing && ["Exibição", "bell", `${U.esc(C.airingLabel(a.airing))}${airDates ? ` · ${U.esc(airDates)}` : ""}`],
-			a.audioLabel && ["Áudio", "cc", U.esc(a.audioLabel)],
-			a.streaming.length && ["Onde assistir", "play", a.streaming.map(s => `<span class="av-tag">${U.esc(s)}</span>`).join("")],
-			a.score && ["Nota no AniList", "star", `${a.score}%`],
-			(a.titleEnglish || a.titleRomaji || a.titleNative) && ["Outros títulos", "globe", [a.titleEnglish, a.titleRomaji, a.titleNative].filter((x, i, l) => x && x !== a.title && l.indexOf(x) === i).map(x => U.esc(x)).join("<br>") || "—"],
-			a.tags.length && ["Tags", "tag", a.tags.map(t => `<span class="av-tag">${U.esc(t)}</span>`).join("")]
+		const chip = (kind, name, list, label = name) => `<a class="av-inline-link" ${U.catAttrs(kind, name, find(list, name))}>${U.esc(label)}</a>`;
+		const joinLinks = arr => arr.join(", ");
+		const m = a.mal;
+		const premiered = a.season ? `<a class="av-inline-link" data-season="${U.attr(a.season)}" data-year="${U.attr(a.seasonYear || "")}" href="#">${U.esc(C.seasonLabel(a.season, a.seasonYear))}</a>` : "";
+		const aired = [a.airedFrom ? U.fmtDate(a.airedFrom) : "", a.airedTo && a.airedTo !== a.airedFrom ? U.fmtDate(a.airedTo) : a.airing === "RELEASING" ? "?" : ""].filter(Boolean).join(" até ");
+		const broadcast = a.broadcast || (a.airingDay !== null ? `${C.weekdays[a.airingDay]}s${a.airingTime ? ` às ${a.airingTime}` : ""}` : "");
+		const info = [
+			["Tipo", U.esc(a.formatLabel)],
+			!C.isMovie(a) && ["Episódios", a.episodes ? String(a.episodes) : "Desconhecido"],
+			a.airing && ["Status", U.esc(C.airingLabel(a.airing))],
+			aired && ["Exibido", U.esc(aired)],
+			premiered && ["Estreia", premiered],
+			broadcast && ["Transmissão", U.esc(broadcast)],
+			a.producers.length && ["Produtoras", U.esc(a.producers.join(", "))],
+			a.studios.length && ["Estúdios", joinLinks(a.studios.map(s => chip("studio", s, model.studios)))],
+			a.source && ["Fonte", U.esc(C.sourceLabel(a.source))],
+			a.genres.length && ["Gêneros", joinLinks(a.genres.map(g => chip("genre", g, model.genres, C.genreLabel(g))))],
+			a.themes.length && ["Temas", U.esc(a.themes.join(", "))],
+			a.demographic.length && ["Demografia", U.esc(a.demographic.join(", "))],
+			["Duração", C.isMovie(a) ? U.esc(U.fmtMinutes(a.duration)) : `${a.duration} min por ep.`],
+			a.ageRating && ["Classificação", U.esc(a.ageRating)],
+			a.audioLabel && ["Áudio", U.esc(a.audioLabel)],
+			a.streaming.length && ["Onde assistir", U.esc(a.streaming.join(", "))]
+		].filter(Boolean);
+		const alt = [["Inglês", a.titleEnglish], ["Romaji", a.titleRomaji], ["Japonês", a.titleNative]].filter(([, v]) => v && v !== a.title);
+		const stats = [
+			m.score && ["Nota MAL", `${U.fmtNum(m.score, 2)}${m.scoredBy ? ` <small>(${U.fmtNum(m.scoredBy)} votos)</small>` : ""}`],
+			m.rank && ["Ranking MAL", `#${U.fmtNum(m.rank)}`],
+			m.popularity && ["Popularidade MAL", `#${U.fmtNum(m.popularity)}`],
+			m.members && ["Membros MAL", U.fmtNum(m.members)],
+			m.favorites && ["Favoritos MAL", U.fmtNum(m.favorites)],
+			a.score && ["Nota AniList", `${a.score}%`],
+			a.anilist.rank && ["Ranking AniList", `#${U.fmtNum(a.anilist.rank)}`],
+			a.anilist.popularity && ["Usuários AniList", U.fmtNum(a.anilist.popularity)]
 		].filter(Boolean);
 		const lists = model.listsByAnime.get(a.path) || [];
 		const dates = [["Adicionado", a.dateAdded], ["Começou", a.startDate], ["Concluiu", a.completionDate], ["Última vez", a.lastWatched]].filter(([, v]) => v);
 		const tiers = { S: "Obra-prima", A: "Excelente", B: "Muito bom", C: "Bom", D: "Esquecível" };
+		const ten = C.scale() === 10;
+		const scoreBox = `<div class="av-scorebox">
+			<div class="av-scorebox-main"><span class="av-scorebox-label">${m.score ? "Nota MAL" : a.score ? "AniList" : "Sua nota"}</span><b>${m.score ? U.fmtNum(m.score, 2) : a.score ? `${a.score}%` : a.rating ? U.esc(U.scoreText(a.rating)) : "N/A"}</b><small>${m.scoredBy ? `${U.fmtNum(m.scoredBy)} votos` : m.score ? "" : a.score ? "média dos usuários" : ""}</small></div>
+			<ul class="av-scorebox-stats">
+				<li><span>Ranking</span><b>${m.rank ? `#${U.fmtNum(m.rank)}` : a.anilist.rank ? `#${U.fmtNum(a.anilist.rank)}` : "N/A"}</b></li>
+				<li><span>Popularidade</span><b>${m.popularity ? `#${U.fmtNum(m.popularity)}` : a.anilist.popularRank ? `#${U.fmtNum(a.anilist.popularRank)}` : "N/A"}</b></li>
+				<li><span>Membros</span><b>${m.members ? U.fmtNum(m.members) : a.anilist.popularity ? U.fmtNum(a.anilist.popularity) : "N/A"}</b></li>
+			</ul>
+			<div class="av-scorebox-tags">${a.season ? `<span>${U.esc(C.seasonLabel(a.season, a.seasonYear))}</span>` : ""}<span>${U.esc(a.formatLabel)}</span>${a.studios[0] ? `<span>${U.esc(a.studios[0])}</span>` : ""}</div>
+			${!m.score && a.malId && ctx.MAL ? `<button type="button" class="av-ovlink" data-action="mal-refresh" data-path="${U.attr(a.path)}">${U.icon("b-mal")}<span>Buscar nota no MAL</span></button>` : ""}
+		</div>`;
 		return `<div class="av-details">
-			<div class="av-details-main">
-				${a.summary ? `<section class="av-block"><h3 class="av-h3">Sinopse</h3><p class="av-synopsis">${U.esc(a.summary)}</p></section>` : U.empty({ icon: "notebook", title: "Sem sinopse", text: a.anilistId ? "Use Atualizar do AniList no menu ⋮." : "Escreva uma em Editar detalhes.", compact: true })}
-				${this._review(ctx, a)}
-				<dl class="av-facts">${facts.map(([k, icon, v]) => `<div class="av-fact"><dt>${U.icon(icon)}${U.esc(k)}</dt><dd>${v}</dd></div>`).join("")}</dl>
-				${this._timeline(ctx, a)}
-			</div>
 			<aside class="av-details-side">
-				<section class="av-surface">
+				<section class="av-surface av-myscore">
 					<h3 class="av-h3">Sua nota</h3>
-					<div class="av-rateline" data-rate-inline data-path="${U.attr(a.path)}">${U.stars(a.rating, { input: true })}<b>${a.rating ? U.fmtNum(a.rating, 1) : "—"}</b></div>
+					${ten ? `<div class="av-rateline">${U.scoreSelect(a.rating, `data-score10 data-path="${U.attr(a.path)}"`)}</div>` : `<div class="av-rateline" data-rate-inline data-path="${U.attr(a.path)}">${U.stars(a.rating, { input: true })}<b>${a.rating ? U.fmtNum(a.rating, 1) : "—"}</b></div>`}
 					${tiers[a.tier] ? `<a class="av-tierchip av-tier--${a.tier.toLowerCase()}" ${U.openAttrs("Dashboard/Tier List")}><b>${U.esc(a.tier)}</b><span>${U.esc(tiers[a.tier])}</span></a>` : ""}
+					<div class="av-statuspick" role="group" aria-label="Mudar status">${Object.keys(C.statusDefs).map(k => `<button type="button" class="av-statuspick-btn${a.status === k ? " is-active" : ""}" data-action="status" data-status="${k}" data-path="${U.attr(a.path)}" style="--av-ms:${C.malStatus[k].color}"><i class="av-dot"></i>${U.esc(C.statusLabel(k))}</button>`).join("")}</div>
+					<div class="av-epline"><span>Episódios</span><b>${a.progress.watched}</b><span>/ ${a.progress.total || "?"}</span>${a.progress.next !== null && !C.isMovie(a) ? `<button type="button" class="av-malrow-plus" data-action="ep-next" data-path="${U.attr(a.path)}" title="Assisti o E${a.progress.next}">${U.icon("plus")}</button>` : ""}</div>
 				</section>
-				<section class="av-surface">
-					<h3 class="av-h3">Progresso</h3>
-					${U.figures([
-						{ label: "Episódios", value: C.isMovie(a) ? (a.progress.done || a.watched ? "Visto" : "—") : `${a.progress.watched}${a.progress.total ? `/${a.progress.total}` : ""}` },
-						{ label: "Tempo assistido", value: a.minutes ? U.fmtMinutes(a.minutes) : "—" },
-						{ label: "Status", html: U.statusTag(a, C) },
-						a.rewatches ? { label: "Reassistido", value: `${a.rewatches}×` } : null
-					])}
-					${dates.length ? `<ol class="av-dates">${dates.map(([k, v]) => `<li><span>${U.esc(k)}</span><time>${U.esc(U.fmtDate(v))}</time></li>`).join("")}</ol>` : ""}
-					<div class="av-statuspick" role="group" aria-label="Mudar status">${Object.keys(C.statusDefs).map(k => `<button type="button" class="av-statuspick-btn${a.status === k ? " is-active" : ""}" data-action="status" data-status="${k}" data-path="${U.attr(a.path)}" title="${U.attr(C.statusLabel(k))}"><i class="av-dot av-tone-${C.statusDefs[k].tone}"></i>${U.esc(C.statusLabel(k))}</button>`).join("")}</div>
-				</section>
-				<section class="av-surface">
-					<h3 class="av-h3">Nas suas listas</h3>
+				${alt.length ? `<section class="av-malbox"><h3>Títulos alternativos</h3><dl>${alt.map(([k, v]) => `<div><dt>${U.esc(k)}:</dt><dd>${U.esc(v)}</dd></div>`).join("")}</dl></section>` : ""}
+				<section class="av-malbox"><h3>Informações</h3><dl>${info.map(([k, v]) => `<div><dt>${U.esc(k)}:</dt><dd>${v}</dd></div>`).join("")}</dl></section>
+				<section class="av-malbox"><h3>Estatísticas</h3>${stats.length ? `<dl>${stats.map(([k, v]) => `<div><dt>${U.esc(k)}:</dt><dd>${v}</dd></div>`).join("")}</dl>` : `<p class="av-muted">${a.malId || a.anilistId ? "Atualize pelo MyAnimeList ou AniList (menu ⋮)." : "Ligue ao MyAnimeList/AniList para ver nota, ranking e popularidade."}</p>`}</section>
+				<section class="av-malbox"><h3>Seu histórico</h3><dl>
+					<div><dt>Tempo assistido:</dt><dd>${a.minutes ? U.esc(U.fmtMinutes(a.minutes)) : "—"}</dd></div>
+					${dates.map(([k, v]) => `<div><dt>${U.esc(k)}:</dt><dd>${U.esc(U.fmtDate(v))}</dd></div>`).join("")}
+					${a.rewatches ? `<div><dt>Reassistido:</dt><dd>${a.rewatches}×</dd></div>` : ""}
+				</dl></section>
+				<section class="av-malbox"><h3>Nas suas listas</h3>
 					${lists.length ? `<div class="av-chiplinks">${lists.map(l => `<a class="av-chiplink" ${U.openAttrs(l.path)}>${U.icon(l.icon || "layers")}${U.esc(l.title)}</a>`).join("")}</div>` : `<p class="av-muted">Ainda em nenhuma lista.</p>`}
 					<button type="button" class="av-ovlink" data-action="list-edit" data-path="${U.attr(a.path)}">${U.icon("plus")}<span>Adicionar a uma lista</span></button>
 				</section>
-				${a.anilistId ? `<section class="av-surface av-alline">${U.icon("b-anilist")}<div><b>AniList</b><small>${a.anilist.lastSync ? `Atualizado ${U.esc(U.relDate(a.anilist.lastSync.slice(0, 10)))}` : "Ligado pelo ID"} · <a href="https://anilist.co/anime/${U.attr(a.anilistId)}">#${U.esc(a.anilistId)}</a></small></div>${U.btn("", { icon: "refresh", kind: "ghost", size: "sm", action: "anilist-refresh", title: "Atualizar do AniList", attrs: `data-path="${U.attr(a.path)}"` })}</section>` : ""}
+				<section class="av-malbox av-extlinks"><h3>Links</h3>
+					${a.anilistId ? `<a href="https://anilist.co/anime/${U.attr(a.anilistId)}">${U.icon("b-anilist")}AniList</a>` : ""}
+					${a.malId ? `<a href="https://myanimelist.net/anime/${U.attr(a.malId)}">${U.icon("b-mal")}MyAnimeList</a>` : ""}
+					${U.safeUrl(a.link) ? `<a href="${U.attr(U.safeUrl(a.link))}">${U.icon("play")}Onde assistir</a>` : ""}
+					${!a.anilistId && !a.malId ? `<p class="av-muted">Sem ligação. Use Editar detalhes para informar os IDs.</p>` : ""}
+				</section>
 			</aside>
+			<div class="av-details-main">
+				${scoreBox}
+				${a.summary ? `<section class="av-block"><h3 class="av-h3 av-h3--line">Sinopse</h3><p class="av-synopsis">${U.esc(a.summary)}</p></section>` : U.empty({ icon: "notebook", title: "Sem sinopse", text: a.anilistId ? "Use Atualizar do AniList no menu ⋮." : "Escreva uma em Editar detalhes.", compact: true })}
+				${a.tags.length ? `<div class="av-taglist">${a.tags.map(t => `<span class="av-tag">${U.esc(t)}</span>`).join("")}</div>` : ""}
+				${this._review(ctx, a)}
+				${this._timeline(ctx, a)}
+			</div>
 		</div>`;
 	}
 
@@ -616,7 +668,7 @@ class AnimeVaultPages {
 		if (!has) return a.watched || a.status === "Completed" ? `<section class="av-review is-empty">${U.icon("star")}<div><b>Minha análise</b><span>O que você achou? Opinião, pontos fortes e fracos.</span></div>${edit}</section>` : "";
 		const rec = a.recommend === true ? `<span class="av-rec is-yes">${U.icon("check")}Recomendo</span>` : a.recommend === false ? `<span class="av-rec is-no">${U.icon("x")}Não recomendo</span>` : "";
 		return `<section class="av-review">
-			<header><h3 class="av-h3">Minha análise</h3>${rec}${edit}</header>
+			<header><h3 class="av-h3">Minha análise</h3>${rec}${a.rating ? `<span class="av-review-score">${U.score(a.rating)}</span>` : ""}${edit}</header>
 			${a.review ? `<blockquote>${U.esc(a.review)}</blockquote>` : ""}
 			${a.pros.length || a.cons.length ? `<div class="av-proscons">
 				${a.pros.length ? `<ul class="is-pro">${a.pros.map(x => `<li>${U.icon("plus")}${U.esc(x)}</li>`).join("")}</ul>` : ""}
@@ -637,7 +689,7 @@ class AnimeVaultPages {
 		if (ev.length < 2) return "";
 		ev.sort((x, y) => x.date.localeCompare(y.date));
 		return `<section class="av-block av-tl">
-			<h3 class="av-h3">Sua história com o anime</h3>
+			<h3 class="av-h3 av-h3--line">Sua história com o anime</h3>
 			<ol class="av-tl-list">${ev.map(e => `<li class="av-tl-item${e.tone ? ` is-${e.tone}` : ""}"><span class="av-tl-dot">${U.icon(e.icon)}</span><div><time>${U.esc(U.fmtDate(e.date))}</time><b>${U.esc(e.title)}</b>${e.sub ? `<small>${U.esc(e.sub)}</small>` : ""}</div></li>`).join("")}</ol>
 		</section>`;
 	}
@@ -650,21 +702,32 @@ class AnimeVaultPages {
 	}
 
 	_wireDetails(root, ctx, a) {
+		const save = async v => {
+			const f = app.vault.getAbstractFileByPath(a.path);
+			if (!f) return;
+			await app.fileManager.processFrontMatter(f, fm => { fm.rating = v; });
+			ctx.V.toast(v ? `Nota ${ctx.U.scoreText(v)}` : "Nota removida", { tone: "ok", icon: "starFill" });
+		};
 		const line = root.querySelector("[data-rate-inline]");
-		line?.querySelectorAll("[data-star]").forEach(b => b.addEventListener("click", async e => {
+		line?.querySelectorAll("[data-star]").forEach(b => b.addEventListener("click", e => {
 			const r = b.getBoundingClientRect();
 			const half = e.clientX && e.clientX < r.left + r.width / 2;
 			const v = Number(b.dataset.star) - (half ? 0.5 : 0);
-			const f = app.vault.getAbstractFileByPath(a.path);
-			if (!f) return;
-			await app.fileManager.processFrontMatter(f, fm => { fm.rating = v === a.rating ? 0 : v; });
-			ctx.V.toast(v === a.rating ? "Nota removida" : `Nota ${ctx.U.fmtNum(v, 1)}`, { tone: "ok", icon: "starFill" });
+			save(v === a.rating ? 0 : v);
 		}));
+		root.querySelector("[data-score10]")?.addEventListener("change", e => save(ctx.C.fromScore10(e.target.value)));
 		root.querySelectorAll("[data-season]").forEach(el => el.addEventListener("click", e => {
 			e.preventDefault(); e.stopPropagation();
 			window.__avSeason = { season: el.dataset.season, year: Number(el.dataset.year) || null };
 			ctx.V.open("Dashboard/Temporadas", ctx);
 		}));
+	}
+
+	// ---- personagens e dubladores (AniList, carregados ao abrir a aba)
+	_characters(ctx, a) {
+		const { U } = ctx;
+		if (!a.anilistId) return U.empty({ icon: "users", title: "Personagens indisponíveis", text: "Ligue este anime ao AniList (anilistId) para ver personagens e dubladores.", compact: true });
+		return `<div data-chars><p class="av-add-hint is-busy">${U.icon("refresh")}Carregando personagens…</p></div>`;
 	}
 
 	// ---- diário de episódios
@@ -684,16 +747,19 @@ class AnimeVaultPages {
 			}).join("")}</ul></li>`).join("")}</ol>`;
 	}
 
-	// ---- relacionados: franquia e parecidos
+	// ---- relacionados: obras ligadas (com o tipo, como no MAL), franquia,
+	// recomendações do AniList e parecidos da sua biblioteca
 	_related(ctx, a) {
 		const { C, U, model } = ctx;
 		const fr = a.franchise ? model.anime.filter(x => x !== a && C.normalizeKey(x.franchise) === C.normalizeKey(a.franchise)).sort((x, y) => (x.franchiseOrder ?? 999) - (y.franchiseOrder ?? 999) || (x.year || 0) - (y.year || 0)) : [];
 		const gs = new Set(a.genres.map(g => C.normalizeKey(g)));
 		const sim = model.anime.filter(x => x !== a && !fr.includes(x)).map(x => ({ x, s: x.genres.filter(g => gs.has(C.normalizeKey(g))).length + (x.studios.some(s => a.studios.includes(s)) ? 0.5 : 0) }))
 			.filter(o => o.s >= 1).sort((p, q) => q.s - p.s || q.x.rating - p.x.rating).slice(0, 18).map(o => o.x);
-		const html = `${fr.length ? `<section class="av-block">${U.sectionHead(`Mais de ${a.franchise}`, { count: fr.length })}${U.grid(fr.map(x => U.animeCard(x, C)))}</section>` : ""}
-			${sim.length ? `<section class="av-block">${U.sectionHead("Mais como este", { sub: "Pelos gêneros e estúdios em comum" })}${U.grid(sim.map(x => U.animeCard(x, C)))}</section>` : ""}`;
-		return { count: fr.length + sim.length, html };
+		const html = `${a.anilistId ? `<div data-al-related></div>` : ""}
+			${fr.length ? `<section class="av-block">${U.sectionHead(`Mais de ${a.franchise}`, { count: fr.length })}${U.grid(fr.map(x => U.animeCard(x, C)))}</section>` : ""}
+			${a.anilistId ? `<div data-al-recs></div>` : ""}
+			${sim.length ? `<section class="av-block">${U.sectionHead("Mais como este na sua biblioteca", { sub: "Pelos gêneros e estúdios em comum" })}${U.grid(sim.map(x => U.animeCard(x, C)))}</section>` : ""}`;
+		return { count: fr.length + sim.length, html, remote: !!a.anilistId };
 	}
 
 	// ========================================================== HISTÓRICO

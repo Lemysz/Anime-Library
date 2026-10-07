@@ -13,7 +13,7 @@ class AnimeVaultUI {
 		this.nav = [
 			{ id: "home", label: "Início", icon: "home", path: "Dashboard/Home" },
 			{ id: "library", label: "Minha biblioteca", short: "Biblioteca", icon: "bookmark", path: "Dashboard/Biblioteca" },
-			{ id: "browse", label: "Navegar", icon: "grid", menu: ["genres", "studios", "franchises", "seasons"] },
+			{ id: "browse", label: "Navegar", icon: "grid", menu: ["genres", "studios", "franchises", "seasons", "ranking"] },
 			{ id: "seasons", label: "Temporada", icon: "tv", path: "Dashboard/Temporadas" },
 			{ id: "calendar", label: "Calendário", icon: "calendar", path: "Dashboard/Calendário" },
 			{ id: "lists", label: "Listas", icon: "layers", path: "Dashboard/Listas" }
@@ -24,6 +24,9 @@ class AnimeVaultUI {
 			library: { label: "Minha biblioteca", icon: "bookmark", path: "Dashboard/Biblioteca" },
 			lists: { label: "Listas", icon: "layers", path: "Dashboard/Listas" },
 			history: { label: "Histórico", icon: "history", path: "Dashboard/Histórico" },
+			profile: { label: "Perfil", icon: "user", path: "Dashboard/Perfil" },
+			ranking: { label: "Ranking", icon: "trophy", path: "Dashboard/Ranking" },
+			integrations: { label: "Integrações", icon: "link", path: "Dashboard/Integrações" },
 			genres: { label: "Gêneros", icon: "masks", path: "Dashboard/Gêneros" },
 			studios: { label: "Estúdios", icon: "building", path: "Dashboard/Estúdios" },
 			franchises: { label: "Franquias", icon: "film", path: "Dashboard/Franquias" },
@@ -36,8 +39,8 @@ class AnimeVaultUI {
 		};
 		this.drawerGroups = [
 			["Anime Vault", ["home", "library", "lists", "history"]],
-			["Navegar", ["genres", "studios", "franchises", "seasons", "calendar"]],
-			["Você", ["statistics", "tierlist", "anilist", "settings"]]
+			["Navegar", ["genres", "studios", "franchises", "seasons", "ranking", "calendar"]],
+			["Você", ["profile", "statistics", "tierlist", "integrations", "anilist", "settings"]]
 		];
 		this.mobileNav = ["home", "library", "genres", "calendar"];
 		this.months = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
@@ -189,6 +192,11 @@ class AnimeVaultUI {
 			puzzle: `<path d="M9 4.5a2 2 0 0 1 4 0V6h4a1 1 0 0 1 1 1v4h-1.5a2 2 0 0 0 0 4H18v4a1 1 0 0 1-1 1h-4v-1.5a2 2 0 0 0-4 0V20H5a1 1 0 0 1-1-1v-4h1.5a2 2 0 0 0 0-4H4V7a1 1 0 0 1 1-1h4z"/>`,
 			gem: `<path d="M6 4h12l3.5 5L12 20.5 2.5 9z"/><path d="M2.5 9h19M9 4l3 16.5L15 4"/>`,
 			medal: `<circle cx="12" cy="14.5" r="5.5"/><path d="M8.5 10 6 3.5h4l2 4 2-4h4L15.5 10"/>`,
+			table: `<rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M3.5 9.5h17M3.5 14.5h17M9 9.5v10"/>`,
+			users: `<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M15.5 4.8a3.5 3.5 0 0 1 0 6.4M18 14.8c2 .7 3.2 2.4 3.5 5.2"/>`,
+			trend: `<path d="M3.5 17 9 11.5l3.5 3.5 8-8"/><path d="M15 7h5.5v5.5"/>`,
+			mic2: `<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/>`,
+			"b-mal": `<path d="M3 16.5v-9l3 4.5 3-4.5v9M11.5 16.5l2.4-9h1.2l2.4 9M12.4 13.2h3.2M19.5 7.5v9h2.5"/>`,
 			// marca do app e do AniList
 			mark: `<rect x="3" y="3" width="18" height="18" rx="5"/><path fill="currentColor" stroke="none" d="M10 8.2c0-.6.7-1 1.2-.7l5.2 3.5c.5.3.5 1.1 0 1.4l-5.2 3.5c-.5.3-1.2 0-1.2-.7z"/>`,
 			"b-anilist": `<path d="M6.5 19.5 10.6 4.5h2.8l4.1 15"/><path d="M8.2 13.5h7.6"/><path d="M17.5 4.5h2v11.5"/>`
@@ -248,6 +256,40 @@ class AnimeVaultUI {
 		return `<span class="av-stars${input ? " av-stars--input" : ""}" ${input ? 'role="group" aria-label="Sua nota"' : `aria-label="${r} de 5"`}>${out}</span>`;
 	}
 
+	// nota na escala escolhida: estrelas (Crunchyroll) ou 1–10 (MyAnimeList)
+	score(rating, { big = false } = {}) {
+		const C = customJS.AnimeVaultCore;
+		if (!rating) return `<span class="av-muted">—</span>`;
+		if (C.scale() === 10) return `<span class="av-score10${big ? " is-big" : ""}" title="${this.attr(C.malScores[C.score10(rating)] || "")}"><b>${C.score10(rating)}</b><small>/10</small></span>`;
+		return this.stars(rating);
+	}
+	scoreText(rating) {
+		const C = customJS.AnimeVaultCore;
+		if (!rating) return "";
+		return C.scale() === 10 ? `${C.score10(rating)}/10` : this.fmtNum(rating, 1);
+	}
+	// seletor de nota do MyAnimeList: (10) Obra-prima … (1) Péssimo
+	scoreSelect(rating, attrs = "") {
+		const C = customJS.AnimeVaultCore;
+		const cur = C.score10(rating);
+		return `<select class="av-select av-select--score" ${attrs}><option value="0"${!cur ? " selected" : ""}>Selecionar</option>${[10, 9, 8, 7, 6, 5, 4, 3, 2, 1].map(n => `<option value="${n}"${cur === n ? " selected" : ""}>(${n}) ${this.esc(C.malScores[n])}</option>`).join("")}</select>`;
+	}
+
+	// linha da lista em tabela, como a "Anime List" do MyAnimeList:
+	// barra colorida do status, capa, título, nota, tipo e progresso com +1
+	malRow(a, C, n) {
+		const ms = C.malStatusOf(a.status);
+		const p = a.progress;
+		return `<div class="av-malrow" data-anime="${this.attr(a.path)}" style="--av-ms:${ms.color}">
+			<span class="av-malrow-n">${n}</span>
+			<a class="av-malrow-art" ${this.openAttrs(a.path)}>${this.cover(a)}</a>
+			<span class="av-malrow-title"><a ${this.openAttrs(a.path)}>${this.esc(a.title)}</a>${a.airing === "RELEASING" ? `<small class="av-malrow-air">Em lançamento</small>` : ""}${a.franchise ? `<small>${this.esc(a.franchise)}</small>` : ""}</span>
+			<span class="av-malrow-score">${a.rating ? (C.scale() === 10 ? `<b>${C.score10(a.rating)}</b>` : `<b>${this.fmtNum(a.rating, 1)}</b>${this.icon("starFill")}`) : `<span class="av-muted">-</span>`}</span>
+			<span class="av-malrow-type">${this.esc(C.formatDefs[a.format]?.short || a.format)}</span>
+			<span class="av-malrow-prog"><b>${p.watched || (p.done ? (p.total || 1) : "-")}</b><span>/ ${p.total || "-"}</span>${p.next !== null && !C.isMovie(a) ? `<button type="button" class="av-malrow-plus" data-action="ep-next" data-path="${this.attr(a.path)}" title="Assisti o E${p.next}" aria-label="Assisti o E${p.next}">${this.icon("plus")}</button>` : ""}</span>
+		</div>`;
+	}
+
 	// capa com fallback gerado: nunca uma área vazia
 	cover(a, { cls = "", eager = false, banner = false } = {}) {
 		const src = banner ? (a.images.banner || a.images.cover) : a.images.cover;
@@ -290,7 +332,7 @@ class AnimeVaultUI {
 				</div>
 				<div class="av-card-hover" aria-hidden="true">
 					<h4>${this.esc(a.title)}</h4>
-					<p class="av-card-hstats">${a.rating ? `<span class="av-card-hrate">${this.fmtNum(a.rating, 1)} ${this.icon("starFill")}</span>` : ""}${eps ? `<span>${this.esc(eps)}</span>` : ""}</p>
+					<p class="av-card-hstats">${a.rating ? `<span class="av-card-hrate">${this.esc(this.scoreText(a.rating))} ${this.icon("starFill")}</span>` : ""}${eps ? `<span>${this.esc(eps)}</span>` : ""}</p>
 					<p class="av-card-hstatus">${this.esc(C.statusLabel(a.status))}${p.total && p.watched ? ` · ${p.watched}/${p.total}` : ""}</p>
 					${a.summary ? `<p class="av-card-hsum">${this.esc(a.summary)}</p>` : ""}
 				</div>
@@ -338,7 +380,7 @@ class AnimeVaultUI {
 			<span class="av-row-cell">${this.statusTag(a, C)}</span>
 			<span class="av-row-cell av-row-prog">${p.total ? `${this.progressBar(p.pct, { thin: true, tone: p.done ? "green" : "" })}<span class="av-num">${p.watched}/${p.total}</span>` : `<span class="av-num">${p.watched || "—"}</span>`}</span>
 			<span class="av-row-cell av-num">${a.minutes ? this.fmtMinutes(a.minutes) : `<span class="av-muted">—</span>`}</span>
-			<span class="av-row-cell">${a.rating ? this.stars(a.rating) : `<span class="av-muted">Sem nota</span>`}</span>
+			<span class="av-row-cell">${a.rating ? this.score(a.rating) : `<span class="av-muted">Sem nota</span>`}</span>
 		</div>`;
 	}
 
@@ -412,7 +454,7 @@ class AnimeVaultUI {
 		const P = this.pages;
 		const browseIds = ["genres", "studios", "franchises", "seasons"];
 		const topActive = ["anime", "list"].includes(active) ? (active === "list" ? "lists" : "library")
-			: ["genre", "studio", "franchise", "genres", "studios", "franchises"].includes(active) ? "browse" : active;
+			: ["genre", "studio", "franchise", "genres", "studios", "franchises", "ranking"].includes(active) ? "browse" : active;
 		const navItem = it => {
 			if (it.menu) {
 				return `<div class="av-menu-wrap av-topnav-menu"><button type="button" class="av-topnav-item${topActive === it.id ? " is-active" : ""}" data-action="menu" aria-haspopup="true" aria-expanded="false">${this.esc(it.label)}${this.icon("chevronDown")}</button>
@@ -424,7 +466,7 @@ class AnimeVaultUI {
 		const drawer = this.drawerGroups.map(([label, ids]) => `<div class="av-nav-group"><span class="av-nav-label">${this.esc(label)}</span>${ids.map(drawerItem).join("")}</div>`).join("");
 		const bottomActive = this.mobileNav.includes(active) ? active
 			: ["anime"].includes(active) ? "library"
-			: [...browseIds, "genre", "studio", "franchise"].includes(active) ? "genres" : active ? "more" : "";
+			: [...browseIds, "genre", "studio", "franchise", "ranking"].includes(active) ? "genres" : active ? "more" : "";
 		const connected = !!cfg?.user;
 		const avatar = cfg?.avatar ? `<img src="${this.attr(cfg.avatar)}" alt="">` : this.icon("user");
 		return `<div class="av-app" data-active="${this.attr(active)}">
@@ -447,7 +489,7 @@ class AnimeVaultUI {
 							<div class="av-account-head"><span class="av-account-avatar">${avatar}</span><span class="av-account-id"><b>${this.esc(connected ? cfg.user : "Anime Vault")}</b><small class="av-account-state${connected ? " is-on" : ""}">${connected ? (cfg.lastSync ? `AniList · sync ${this.esc(this.relDate(String(cfg.lastSync).slice(0, 10)))}` : "AniList conectado") : "AniList não conectado"}</small></span></div>
 							${connected ? `<button role="menuitem" data-action="anilist-sync">${this.icon("refresh")}Sincronizar AniList</button>` : `<button role="menuitem" data-action="anilist-connect">${this.icon("link")}Conectar AniList</button>`}
 							<div class="av-menu-sep"></div>
-							${["history", "statistics", "tierlist", "anilist", "settings"].map(id => `<a role="menuitem" ${this.openAttrs(P[id].path)}>${this.icon(P[id].icon)}${this.esc(P[id].label)}</a>`).join("")}
+							${["profile", "history", "statistics", "tierlist", "integrations", "settings"].map(id => `<a role="menuitem" ${this.openAttrs(P[id].path)}>${this.icon(P[id].icon)}${this.esc(P[id].label)}</a>`).join("")}
 						</div>
 					</div>
 				</div>

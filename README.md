@@ -5,15 +5,17 @@
 <h1 align="center">Anime Vault</h1>
 
 <p align="center">
-  <img alt="Versão" src="https://img.shields.io/badge/vers%C3%A3o-1.0.0-f47521?style=for-the-badge&labelColor=000000">
+  <img alt="Versão" src="https://img.shields.io/badge/vers%C3%A3o-1.1.0-f47521?style=for-the-badge&labelColor=000000">
   <img alt="Obsidian" src="https://img.shields.io/badge/Obsidian-desktop%20%C2%B7%20celular-7c3aed?style=for-the-badge&logo=obsidian&logoColor=white&labelColor=000000">
   <img alt="AniList" src="https://img.shields.io/badge/AniList-sem%20senha-3db4f2?style=for-the-badge&labelColor=000000">
+  <img alt="MyAnimeList" src="https://img.shields.io/badge/MyAnimeList-XML%20%C2%B7%20Jikan-2e51a2?style=for-the-badge&labelColor=000000">
   <img alt="Idioma" src="https://img.shields.io/badge/idioma-portugu%C3%AAs-e9bd52?style=for-the-badge&labelColor=000000">
 </p>
 
 <p align="center">
   <b>Sua biblioteca de animes no Obsidian, com cara de app de streaming.</b><br>
-  Mesma base do Steam Vault 3.19.0, com visual inspirado na Crunchyroll: palco preto, laranja, capas retas e fileiras.<br>
+  Mesma base do Steam Vault 3.19.0, inspirado na Crunchyroll (palco preto, laranja, fileiras, episódios em miniatura)<br>
+  e no MyAnimeList (notas de 1 a 10, lista em tabela, ficha com Informações e Estatísticas, perfil, Top anime).<br>
   <sub>Episódios, diário, temporadas, calendário de lançamentos, listas, estatísticas e sync público do AniList, em notas Markdown que continuam suas.</sub>
 </p>
 
@@ -42,6 +44,11 @@
     <td valign="top">📊 <b>Estatísticas e Tier List</b><br><sub>Por período: episódios, tempo, gêneros, estúdios, notas, dia da semana. Tier List com arrastar e soltar.</sub></td>
     <td valign="top">🔗 <b>AniList sem senha</b><br><sub>Busca com capa e banner, atualização de metadados e sync da sua lista pública (só o nome de usuário).</sub></td>
   </tr>
+  <tr>
+    <td valign="top">🔟 <b>Notas do MyAnimeList</b><br><sub>Escolha 5 estrelas ou a escala de 1 a 10 do MAL, com os rótulos "(10) Obra-prima"… Lista em tabela com as barras de status e "+1".</sub></td>
+    <td valign="top">📋 <b>Ficha completa</b><br><sub>Informações e Estatísticas como no MAL (fonte, demografia, transmissão, nota, ranking, membros), personagens e dubladores, obras relacionadas e recomendações.</sub></td>
+    <td valign="top">🏆 <b>Perfil, Ranking e XML</b><br><sub>"Anime Stats" no estilo MAL, seu top e o Top do MyAnimeList. Importe e exporte sua lista pelo XML oficial do MAL.</sub></td>
+  </tr>
 </table>
 
 <p align="center">
@@ -64,7 +71,7 @@
 > Os 16 animes de exemplo já têm `anilistId`. Em **Configurações › Baixar capas e banners que faltam**, as artes chegam do AniList. Para começar do zero, apague as notas de `Animes/` e `Lists/`.
 
 > [!NOTE]
-> O AniList é acessado só pela API pública. Não há senha, login nem token: para o sync, basta o seu nome de usuário, guardado neste dispositivo. O sync nunca apaga nem diminui o progresso das notas.
+> Nenhuma integração pede senha, login ou token. O AniList usa a API pública: para o sync, basta o seu nome de usuário, guardado neste dispositivo. O MyAnimeList entra de duas formas: estatísticas pela Jikan (API pública e não oficial do MAL) e a sua lista pelo arquivo XML que o próprio MAL exporta. Nenhum sync ou importação apaga ou diminui o progresso das notas.
 
 ## 🧭 Como o vault é organizado
 
@@ -83,4 +90,4 @@ Cada anime é uma nota Markdown. Dá para editar à mão, versionar e levar para
 
 - [Documentação](DOCUMENTACAO.md): campos, telas, AniList e solução de problemas.
 
-<p align="center"><sub>Feito com Obsidian, Dataview e CustomJS, sobre a arquitetura do Steam Vault. Visual inspirado em serviços de streaming de anime; o Anime Vault não é afiliado à Crunchyroll nem ao AniList.</sub></p>
+<p align="center"><sub>Feito com Obsidian, Dataview e CustomJS, sobre a arquitetura do Steam Vault. Inspirado em Crunchyroll, MyAnimeList e AniList; o Anime Vault não é afiliado a nenhum deles.</sub></p>

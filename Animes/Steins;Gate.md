@@ -38,6 +38,12 @@ anilistId: "9253"
 malId: "9253"
 averageScore: 89
 link: ""
+source: "Visual novel"
+demographic: []
+themes: []
+producers: []
+ageRating: ""
+broadcast: ""
 dateAdded: "2026-07-22"
 startDate: ""
 completionDate: ""

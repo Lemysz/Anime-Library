@@ -214,11 +214,20 @@ class AnimeVaultAniList {
 		return `id idMal title { romaji english native } format status episodes duration season seasonYear
 			startDate { year month day } endDate { year month day } genres synonyms isAdult
 			tags { name rank isMediaSpoiler } studios(isMain: true) { nodes { name } }
-			description(asHtml: false) averageScore popularity
+			description(asHtml: false) averageScore popularity favourites source(version: 3) rankings { rank type allTime }
 			coverImage { extraLarge large color } bannerImage nextAiringEpisode { episode airingAt }
 			streamingEpisodes { title thumbnail site }
-			externalLinks { site url type }
-			relations { edges { relationType node { id type } } }`;
+			externalLinks { site url type }`;
+	}
+
+	// relações simples (lote) × completas, personagens e recomendações (um anime só:
+	// em lote, estouraria o limite de complexidade do AniList)
+	get batchExtra() { return "relations { edges { relationType node { id type } } }"; }
+	get extraFields() {
+		return `relations { edges { relationType node { id idMal type format status seasonYear title { romaji english native } coverImage { large } } } }
+			characters(sort: [ROLE, RELEVANCE], perPage: 18) { edges { role node { id name { full } image { medium } }
+				voiceActors(language: JAPANESE, sort: RELEVANCE) { id name { full } image { medium } } } }
+			recommendations(perPage: 12, sort: RATING_DESC) { nodes { rating mediaRecommendation { id idMal type format seasonYear episodes title { romaji english native } coverImage { large } genres } } }`;
 	}
 
 	async search(q) {
@@ -233,7 +242,7 @@ class AnimeVaultAniList {
 	}
 
 	async media(id) {
-		const d = await this.gql(`query ($id: Int) { Media(id: $id, type: ANIME) { ${this.mediaFields} } }`, { id: Number(id) });
+		const d = await this.gql(`query ($id: Int) { Media(id: $id, type: ANIME) { ${this.mediaFields} ${this.extraFields} } }`, { id: Number(id) });
 		if (!d.Media) throw this._err("not_found");
 		return d.Media;
 	}
@@ -242,7 +251,7 @@ class AnimeVaultAniList {
 		const out = [];
 		const list = [...new Set(ids.map(Number).filter(Boolean))];
 		for (let i = 0; i < list.length; i += 50) {
-			const d = await this.gql(`query ($ids: [Int]) { Page(perPage: 50) { media(id_in: $ids, type: ANIME) { ${this.mediaFields} } } }`, { ids: list.slice(i, i + 50) });
+			const d = await this.gql(`query ($ids: [Int]) { Page(perPage: 50) { media(id_in: $ids, type: ANIME) { ${this.mediaFields} ${this.batchExtra} } } }`, { ids: list.slice(i, i + 50) });
 			out.push(...(d.Page?.media || []));
 		}
 		return out;
@@ -280,8 +289,114 @@ class AnimeVaultAniList {
 			summary: C.plainText(m.description, 1400),
 			averageScore: Number(m.averageScore) || "",
 			anilistId: String(m.id), malId: m.idMal ? String(m.idMal) : "",
+			source: m.source ? C.sourceLabel(m.source) : "",
 			nextAiring: na?.airingAt ? { episode: na.episode, at: new Date(na.airingAt * 1000).toISOString() } : null
 		};
+	}
+
+	// popularidade e ranking do AniList (vão no objeto `anilist` da nota)
+	_alStats(m) {
+		const r = t => (m.rankings || []).find(x => x.type === t && x.allTime)?.rank || "";
+		return { lastSync: new Date().toISOString(), syncStatus: "ok", popularity: Number(m.popularity) || "", favourites: Number(m.favourites) || "", rank: r("RATED"), popularRank: r("POPULAR") };
+	}
+
+	// ===================================== extras (personagens, relações, recomendações)
+	async _extrasCache() {
+		if (!window.__avExtras) window.__avExtras = this.readCache("media").then(x => x || {});
+		return window.__avExtras;
+	}
+
+	async _storeExtras(list) {
+		const cache = await this._extrasCache();
+		const C = this.C, cfg = this.getConfig();
+		for (const m of list) {
+			if (!m.characters) continue;
+			cache[m.id] = {
+				at: new Date().toISOString(),
+				characters: (m.characters?.edges || []).slice(0, 18).map(e => ({
+					name: C.clip(e.node?.name?.full, 80), image: C.safeUrl(e.node?.image?.medium, { hosts: ["anilist.co"] }), role: e.role || "",
+					va: e.voiceActors?.[0] ? { name: C.clip(e.voiceActors[0].name?.full, 80), image: C.safeUrl(e.voiceActors[0].image?.medium, { hosts: ["anilist.co"] }) } : null
+				})),
+				relations: (m.relations?.edges || []).map(e => ({
+					type: e.relationType, id: String(e.node?.id || ""), malId: e.node?.idMal ? String(e.node.idMal) : "", kind: e.node?.type || "", format: e.node?.format || "",
+					title: this._title(e.node || {}, cfg), year: e.node?.seasonYear || null, cover: C.safeUrl(e.node?.coverImage?.large, { hosts: ["anilist.co"] })
+				})).filter(r => r.id),
+				recs: (m.recommendations?.nodes || []).filter(n => n.mediaRecommendation && (n.rating || 0) > 0).map(n => ({
+					id: String(n.mediaRecommendation.id), malId: n.mediaRecommendation.idMal ? String(n.mediaRecommendation.idMal) : "", votes: n.rating,
+					title: this._title(n.mediaRecommendation, cfg), format: n.mediaRecommendation.format || "", year: n.mediaRecommendation.seasonYear || null,
+					episodes: n.mediaRecommendation.episodes || null, genres: (n.mediaRecommendation.genres || []).slice(0, 3),
+					cover: C.safeUrl(n.mediaRecommendation.coverImage?.large, { hosts: ["anilist.co"] })
+				})).slice(0, 12)
+			};
+		}
+		await this.writeCache("media", cache);
+	}
+
+	relationLabel(t) {
+		return ({ SEQUEL: "Sequência", PREQUEL: "Prequel", SIDE_STORY: "História paralela", PARENT: "História principal", SPIN_OFF: "Spin-off",
+			ALTERNATIVE: "Versão alternativa", SUMMARY: "Resumo", ADAPTATION: "Adaptação", SOURCE: "Obra original", CHARACTER: "Personagem em comum",
+			COMPILATION: "Compilação", CONTAINS: "Contém", OTHER: "Outro" })[t] || t;
+	}
+
+	// preenche as abas Personagens e Relacionados da ficha (cache; senão, uma consulta)
+	async fillExtras(ctx, root, a) {
+		const { U, C, V } = ctx;
+		const cache = await this._extrasCache();
+		let x = cache[a.anilistId];
+		const slots = { chars: root.querySelector("[data-chars]"), rel: root.querySelector("[data-al-related]"), recs: root.querySelector("[data-al-recs]") };
+		if (!x) {
+			try {
+				const m = await this.media(a.anilistId);
+				await this._storeExtras([m]);
+				this._storeEpisodes([m]).catch(() => {});
+				x = (await this._extrasCache())[a.anilistId];
+			} catch (err) {
+				if (slots.chars) slots.chars.innerHTML = U.empty({ icon: "cloudOff", title: "Sem conexão com o AniList", text: "Personagens, relações e recomendações aparecem quando houver internet (e ficam guardados para depois).", compact: true });
+				return;
+			}
+		}
+		if (!root.isConnected || !x) return;
+		const model = C.model(ctx.dv);
+		const byId = new Map(model.anime.filter(z => z.anilistId).map(z => [String(z.anilistId), z]));
+		const roleLabel = r => ({ MAIN: "Principal", SUPPORTING: "Secundário", BACKGROUND: "Figurante" })[r] || r;
+		if (slots.chars) {
+			slots.chars.innerHTML = x.characters.length ? `<div class="av-chars">${x.characters.map(c => `<div class="av-char">
+				<span class="av-char-img">${c.image ? `<img src="${U.attr(c.image)}" alt="" loading="lazy" data-av-img>` : U.icon("user")}</span>
+				<span class="av-char-text"><b>${U.esc(c.name)}</b><small>${U.esc(roleLabel(c.role))}</small></span>
+				${c.va ? `<span class="av-char-text is-va"><b>${U.esc(c.va.name)}</b><small>Japonês</small></span><span class="av-char-img">${c.va.image ? `<img src="${U.attr(c.va.image)}" alt="" loading="lazy" data-av-img>` : U.icon("mic2")}</span>` : ""}
+			</div>`).join("")}</div><p class="av-fineprint">${U.icon("b-anilist")}Personagens e dubladores japoneses do AniList.</p>` : U.empty({ icon: "users", title: "O AniList não tem personagens para este anime", compact: true });
+		}
+		const remoteCard = (r, extra = "") => {
+			const have = byId.get(r.id);
+			return `<div class="av-relcard${have ? " is-have" : ""}">
+				${have ? `<a class="av-relcard-art" ${U.openAttrs(have.path)}>${U.cover(have)}</a>` : `<span class="av-relcard-art"><span class="av-cover"><span class="av-cover-fallback" style="--av-hue:${C.hashHue(r.title)}"><span class="av-cover-fallback-title">${U.esc(r.title)}</span></span>${r.cover ? `<img src="${U.attr(r.cover)}" alt="" loading="lazy" data-av-img>` : ""}</span></span>`}
+				<span class="av-relcard-body">${extra}<b>${have ? `<a ${U.openAttrs(have.path)}>${U.esc(have.title)}</a>` : U.esc(r.title)}</b><small>${U.esc([C.formatLabel(r.format) || r.format, r.year].filter(Boolean).join(" · "))}</small>
+				${have ? U.statusTag(have, C) : r.kind === "ANIME" || !r.kind ? `<button type="button" class="av-relcard-add" data-al-add="${U.attr(r.id)}">${U.icon("plus")}<span>Adicionar</span></button>` : `<span class="av-tag">${U.esc(r.kind === "MANGA" ? "Mangá / novel" : r.kind)}</span>`}</span>
+			</div>`;
+		};
+		if (slots.rel) {
+			const order = ["PREQUEL", "SEQUEL", "PARENT", "SIDE_STORY", "SPIN_OFF", "ALTERNATIVE", "SUMMARY", "SOURCE", "ADAPTATION", "COMPILATION", "CONTAINS", "CHARACTER", "OTHER"];
+			const rel = [...x.relations].sort((p, q) => order.indexOf(p.type) - order.indexOf(q.type));
+			slots.rel.innerHTML = rel.length ? `<section class="av-block">${U.sectionHead("Obras relacionadas", { count: rel.length, sub: "Do AniList, com o tipo de relação (como no MyAnimeList)" })}<div class="av-relgrid">${rel.map(r => remoteCard(r, `<span class="av-relcard-type">${U.esc(this.relationLabel(r.type))}</span>`)).join("")}</div></section>` : "";
+		}
+		if (slots.recs) {
+			slots.recs.innerHTML = x.recs.length ? `<section class="av-block">${U.sectionHead("Recomendações da comunidade", { sub: "Quem gostou deste também gostou de…" })}<div class="av-relgrid">${x.recs.map(r => remoteCard(r, `<span class="av-relcard-type">${U.icon("users")}${U.fmtNum(r.votes)} ${r.votes === 1 ? "voto" : "votos"}</span>`)).join("")}</div></section>` : "";
+		}
+		V._wireImages(root);
+		if (!root.__avAddBound) {
+			root.__avAddBound = true;
+			root.addEventListener("click", async e => {
+				const b = e.target.closest("[data-al-add]");
+				if (!b) return;
+				e.preventDefault(); e.stopPropagation();
+				b.disabled = true; b.querySelector("span").textContent = "Adicionando…";
+				try {
+					const f = await this.createFromId(ctx, b.dataset.alAdd, { status: "Planning" });
+					b.querySelector("span").textContent = "Na sua lista"; b.classList.add("is-done");
+					V.toast(`${f.basename} em Quero assistir`, { tone: "ok", icon: "bookmark" });
+				} catch (err) { b.disabled = false; b.querySelector("span").textContent = "Adicionar"; V.toast(this.message(err), { tone: "error" }); }
+			});
+		}
 	}
 
 	// franquia: herda a de um prequel/sequel que já esteja no vault
@@ -319,8 +434,9 @@ class AnimeVaultAniList {
 			...v, ...art, status, franchise: this._franchiseFor(ctx, m),
 			episodesWatched: eps ? Math.min(w, eps) : w, rating, startDate, completionDate, rewatches
 		});
-		await app.fileManager.processFrontMatter(file, fm => { fm.anilist = { lastSync: new Date().toISOString(), syncStatus: "ok" }; });
+		await app.fileManager.processFrontMatter(file, fm => { fm.anilist = this._alStats(m); });
 		this._storeEpisodes([m]).catch(() => {});
+		this._storeExtras([m]).catch(() => {});
 		return file;
 	}
 
@@ -371,16 +487,17 @@ class AnimeVaultAniList {
 					for (const k of ["titleRomaji", "titleEnglish", "titleNative", "format", "duration", "season", "seasonYear", "airingStatus", "airedFrom", "airedTo", "averageScore", "malId"]) if (v[k] !== "" && v[k] !== undefined) fm[k] = v[k];
 					if (v.episodes) fm.episodes = v.episodes;
 					if (v.nextAiring) fm.nextAiring = v.nextAiring; else delete fm.nextAiring;
-					for (const k of ["genre", "studio", "streaming", "summary", "link"]) if (empty(k) && v[k] && (!Array.isArray(v[k]) || v[k].length)) fm[k] = v[k];
+					for (const k of ["genre", "studio", "streaming", "summary", "link", "source"]) if (empty(k) && v[k] && (!Array.isArray(v[k]) || v[k].length)) fm[k] = v[k];
 					if (!Array.isArray(fm.tags) || fm.tags.filter(x => x !== "anime").length === 0) fm.tags = v.tags;
 					if (imgs.cover) fm.cover = imgs.cover;
 					if (imgs.banner) fm.banner = imgs.banner;
 					if (empty("franchise")) { const fr = this._franchiseFor(ctx, m); if (fr) fm.franchise = fr; }
-					fm.anilist = { lastSync: new Date().toISOString(), syncStatus: "ok" };
+					fm.anilist = this._alStats(m);
 				});
 				done++;
 			}
 			await this._storeEpisodes(media);
+			await this._storeExtras(media);
 			t.update(`AniList: ${U.plural(done, "anime atualizado", "animes atualizados")}${art ? `, artes em ${art}` : ""}${failed ? `, ${failed} não encontrados` : ""}`, { tone: failed ? "warn" : "ok" });
 		} catch (err) {
 			t.update(`AniList: ${this.message(err)}`, { tone: err.code === "rate_limited" ? "warn" : "error" });

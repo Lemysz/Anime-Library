@@ -223,7 +223,7 @@ class AnimeVaultBrowse {
 
 	browseTabs(ctx, active) {
 		const { U } = ctx;
-		const t = [["genres", "Gêneros", "Dashboard/Gêneros"], ["studios", "Estúdios", "Dashboard/Estúdios"], ["franchises", "Franquias", "Dashboard/Franquias"], ["seasons", "Temporadas", "Dashboard/Temporadas"]];
+		const t = [["genres", "Gêneros", "Dashboard/Gêneros"], ["studios", "Estúdios", "Dashboard/Estúdios"], ["franchises", "Franquias", "Dashboard/Franquias"], ["seasons", "Temporadas", "Dashboard/Temporadas"], ["ranking", "Ranking", "Dashboard/Ranking"]];
 		return `<nav class="av-tabs av-tabs--links" aria-label="Navegar">${t.map(([id, label, path]) => `<a class="av-tab${id === active ? " is-active" : ""}" ${U.openAttrs(path)}>${U.esc(label)}</a>`).join("")}</nav>`;
 	}
 
@@ -339,6 +339,17 @@ class AnimeVaultBrowse {
 		const keys = new Set([...have.keys(), C.seasonKey(now.season, now.year), C.seasonKey(cur.season, cur.year)]);
 		const options = [...keys].sort().reverse().map(k => { const [y, o] = k.split("-").map(Number); const s = Object.keys(C.seasonDefs).find(x => C.seasonDefs[x].order === o); return { season: s, year: y, n: have.get(k)?.length || 0 }; });
 		const list = have.get(C.seasonKey(cur.season, cur.year)) || [];
+		// como a página sazonal do MAL: por formato, com "TV (continuando)"
+		const isNowSeason = cur.season === now.season && cur.year === now.year;
+		const continuing = isNowSeason ? model.anime.filter(a => a.airing === "RELEASING" && a.season && a.seasonYear && C.seasonKey(a.season, a.seasonYear) < C.seasonKey(cur.season, cur.year)) : [];
+		const byFormat = U._store("seasonView") === "format";
+		const sortS = arr => [...arr].sort((x, y) => (["Watching", "Rewatching"].includes(y.status) - ["Watching", "Rewatching"].includes(x.status)) || y.rating - x.rating || x.title.localeCompare(y.title));
+		const groups = [
+			["TV (novos)", list.filter(a => ["TV", "TV_SHORT"].includes(a.format))],
+			["TV (continuando)", continuing.filter(a => ["TV", "TV_SHORT"].includes(a.format))],
+			["ONA", list.filter(a => a.format === "ONA")], ["OVA", list.filter(a => a.format === "OVA")],
+			["Filmes", list.filter(a => a.format === "MOVIE")], ["Especiais", list.filter(a => ["SPECIAL", "MUSIC"].includes(a.format))]
+		].filter(([, l]) => l.length);
 		const prev = C.shiftSeason(cur.season, cur.year, -1), next = C.shiftSeason(cur.season, cur.year, 1);
 		const isNow = cur.season === now.season && cur.year === now.year;
 		const html = `<div class="av-page av-pad av-seasonpage">
@@ -350,13 +361,16 @@ class AnimeVaultBrowse {
 				<button type="button" class="av-iconbtn" data-season-go="${next.season}:${next.year}" aria-label="Próxima temporada">${U.icon("chevronRight")}</button>
 				${isNow ? "" : `<button type="button" class="av-ovlink" data-season-go="${now.season}:${now.year}">${U.icon("calendar")}<span>Ir para a atual</span></button>`}
 			</div>
-			${list.length ? U.grid([...list].sort((x, y) => (["Watching", "Rewatching"].includes(y.status) - ["Watching", "Rewatching"].includes(x.status)) || y.rating - x.rating || x.title.localeCompare(y.title)).map(a => U.animeCard(a, C))) : U.empty({ icon: C.seasonDefs[cur.season].icon, title: "Nenhum anime desta temporada no vault", text: ctx.AL ? "Use as setas para ver outras temporadas. Com internet, o que está em alta no AniList aparece logo abaixo para adicionar com um toque." : "Adicione animes com season e seasonYear para vê-los aqui.", compact: true })}
+			${list.length || continuing.length ? `<div class="av-seasonview"><div class="av-segmented" role="radiogroup"><button type="button" data-season-view="grid" class="${byFormat ? "" : "is-active"}">Grade</button><button type="button" data-season-view="format" class="${byFormat ? "is-active" : ""}">Por formato (MAL)</button></div></div>` : ""}
+			${byFormat && groups.length ? groups.map(([label, l]) => `<section class="av-block av-seasongroup">${U.sectionHead(label, { count: l.length })}${U.grid(sortS(l).map(a => U.animeCard(a, C)))}</section>`).join("")
+			: list.length ? U.grid(sortS(list).map(a => U.animeCard(a, C))) : U.empty({ icon: C.seasonDefs[cur.season].icon, title: "Nenhum anime desta temporada no vault", text: ctx.AL ? "Use as setas para ver outras temporadas. Com internet, o que está em alta no AniList aparece logo abaixo para adicionar com um toque." : "Adicione animes com season e seasonYear para vê-los aqui.", compact: true })}
 			<div data-season-remote></div>
 			${options.filter(o => o.n).length > 1 ? `<section class="av-block">${U.sectionHead("Por temporada", { sub: "Quantos animes de cada temporada estão na sua biblioteca" })}<div class="av-fchips av-fchips--wrap">${options.filter(o => o.n).map(o => `<button type="button" class="av-fchip${o.season === cur.season && o.year === cur.year ? " is-active" : ""}" data-season-go="${o.season}:${o.year}">${U.icon(C.seasonDefs[o.season].icon)}${U.esc(C.seasonLabel(o.season, o.year))}<span>${o.n}</span></button>`).join("")}</div></section>` : ""}
 		</div>`;
 		return {
 			active: "seasons", html, wire: root => {
 				const go = v => { const [s, y] = v.split(":"); U._store("season", JSON.stringify({ season: s, year: Number(y) })); ctx.V._rerender("seasons"); };
+				root.querySelectorAll("[data-season-view]").forEach(b => b.addEventListener("click", () => { U._store("seasonView", b.dataset.seasonView); ctx.V._rerender("seasons"); }));
 				root.querySelectorAll("[data-season-go]").forEach(b => b.addEventListener("click", () => go(b.dataset.seasonGo)));
 				root.querySelector("[data-season-pick]")?.addEventListener("change", e => go(e.target.value));
 				const slot = root.querySelector("[data-season-remote]");

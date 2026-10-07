@@ -26,7 +26,7 @@ await dv.view("Assets/animevault-boot", { page: "anime" });
 
 O boot mostra a tela de carregamento enquanto o CustomJS não terminou de carregar e então chama `customJS.AnimeVault.render(dv, "anime")`. Na aba principal, o app é desenhado numa camada própria sobre a nota (como no Steam Vault), então fica igual no modo leitura e no modo edição. Para editar o texto da nota, use o modo código-fonte.
 
-Telas: `home`, `library`, `anime`, `history`, `lists`, `list`, `genres`, `genre`, `studios`, `studio`, `franchises`, `franchise`, `seasons`, `calendar`, `statistics`, `tierlist`, `settings`, `anilist`.
+Telas: `home`, `library`, `anime`, `history`, `lists`, `list`, `genres`, `genre`, `studios`, `studio`, `franchises`, `franchise`, `seasons`, `ranking`, `calendar`, `statistics`, `tierlist`, `profile`, `integrations`, `settings`, `anilist`.
 
 ## Scripts
 
@@ -39,7 +39,8 @@ Telas: `home`, `library`, `anime`, `history`, `lists`, `list`, `genres`, `genre`
 | `AnimeVaultBrowse.js` | Listas, Gêneros, Estúdios, Franquias, Temporadas |
 | `AnimeVaultInsights.js` | Calendário, Estatísticas, Tier List, Configurações |
 | `AnimeVaultEditor.js` | Formulários: adicionar, editar, diário, análise e nota, listas, identidade, Surpreenda-me |
-| `AnimeVaultAniList.js` | API pública do AniList: busca, metadados, artes, sync do perfil, em alta na temporada |
+| `AnimeVaultAniList.js` | API pública do AniList: busca, metadados, artes, personagens, relações, recomendações, sync do perfil, em alta na temporada |
+| `AnimeVaultMAL.js` | MyAnimeList: estatísticas e ficha pela Jikan, Top do MAL, importar/exportar XML, tela Integrações |
 
 ## Schema do anime
 
@@ -60,7 +61,9 @@ Telas: `home`, `library`, `anime`, `history`, `lists`, `list`, `genres`, `genre`
 | `review`, `pros`, `cons`, `recommend` | Minha análise |
 | `cover`, `banner`, `bgPosX`, `bgPosY` | Artes e enquadramento do banner. Sem arte, o app gera um fundo próprio |
 | `featuredOnHome` | `true` coloca no carrossel do Início. Sem nenhum marcado, o Vault escolhe (assistindo, favoritos, com arte) |
-| `anilistId`, `malId`, `averageScore` | Ligação com AniList/MyAnimeList |
+| `anilistId`, `malId`, `averageScore` | Ligação com AniList/MyAnimeList; `averageScore` é a nota média do AniList (0–100) |
+| `source`, `demographic`, `themes`, `producers`, `ageRating`, `broadcast` | Ficha no estilo MAL: fonte (Mangá, Light novel…), demografia (Shounen…), temas, produtoras, classificação, transmissão |
+| `mal` | Estatísticas do MyAnimeList (nota, votos, ranking, popularidade, membros, favoritos), escritas pelo app |
 | `dateAdded`, `startDate`, `completionDate`, `lastWatched`, `rewatches` | Datas e quantas vezes você reassistiu |
 | `anilist` | Cache do último sync (não edite) |
 
@@ -88,6 +91,19 @@ Tudo pela API pública (`graphql.anilist.co`), uma consulta por vez, com pausa a
 - **Temporadas:** "Em alta nesta temporada no AniList" (cache de 12 h), com um toque para adicionar em "Quero assistir".
 - **Episódios:** quando o AniList tem a lista de episódios de streaming, a grade mostra os títulos e miniaturas reais.
 
+## MyAnimeList
+
+- **Escala de notas** (Integrações ou Configurações): *5 estrelas* (com meia) ou *1–10* como no MAL, com os rótulos do MAL ("(10) Obra-prima", "(9) Ótimo"…). A nota fica guardada igual em `rating` (0–5 em meias = 0–10), então trocar a escala não muda nada nas notas.
+- **Lista em tabela** (Minha biblioteca › terceiro botão de visualização): como a Anime List do MAL, com a barra colorida de cada status (verde assistindo, azul concluído, amarelo em espera, vermelho abandonado, cinza planejo assistir), seções por status em "Todos" e o **+** ao lado do progresso.
+- **Ficha › Detalhes**: o bloco de nota (nota do MAL, ranking, popularidade, membros) e, na lateral, *Títulos alternativos*, *Informações*, *Estatísticas*, *Seu histórico* e *Links*.
+- **Atualizar do MyAnimeList** (menu ⋮ ou Integrações): lê na Jikan a nota, os votos, o ranking, a popularidade, os membros e os favoritos, e preenche, se estiverem vazios, fonte, demografia, temas, produtoras, classificação e transmissão. Precisa do `malId` (o AniList preenche sozinho).
+- **Personagens** (aba da ficha): personagens com os dubladores japoneses, pelo AniList. **Relacionados**: obras ligadas com o tipo da relação (sequência, prequel, história paralela, obra original…) e recomendações da comunidade, cada uma com *Adicionar*. Ficam em cache em `.animevault/media.json`.
+- **Perfil**: "Estatísticas de anime" como no MAL (dias, nota média, barra de status, total, reassistidos, episódios), últimas atualizações, distribuição das notas, gêneros e favoritos.
+- **Ranking**: o seu top (por nota, nota do MAL, popularidade ou tempo assistido) e o **Top do MyAnimeList** (geral, em lançamento, mais populares, em breve), com *Quero assistir* para adicionar.
+- **Temporadas › Por formato (MAL)**: TV (novos), TV (continuando), ONA, OVA, Filmes e Especiais.
+- **Importar XML do MAL** (Integrações): no MAL, *Perfil › Export* (lista de anime). Escolha o `.xml` ou o `.xml.gz`. A prévia mostra quantos são novos e quantos já estão no vault. Os existentes seguem as mesmas regras do sync do AniList (progresso maior vence, a diferença entra no diário com `source: myanimelist`, nota e datas só se vazias). Os novos nascem com capa, banner e metadados do AniList (pelo id do MAL).
+- **Exportar XML para o MAL**: gera `Exports/animelist-AAAA-MM-DD.xml` no formato do MAL, para importar em myanimelist.net/import.php (entram os animes com `malId`).
+
 ## Aparência
 
 Visual inspirado na Crunchyroll: fundo preto, cabeçalho grafite, laranja `#f47521` como única cor de ação, fonte Lato, capas de cantos retos, botões em caixa alta, hover que revela sinopse e ações. O app é sempre escuro, como os apps de streaming.
@@ -112,5 +128,7 @@ Atalhos: `/` ou `Ctrl/Cmd + K` para buscar (Enter sem resultado busca no AniList
 | Tela sem estilo | Snippet `animevault` desativado em *Aparência* |
 | Sem capas | Use *Configurações › Baixar capas e banners que faltam* (precisa de `anilistId`) |
 | "Esse perfil ou lista é privado" | A lista do AniList precisa ser pública para o sync |
+| "Nota MAL" em N/A | Falta `malId` ou ainda não foi atualizado: menu ⋮ › Atualizar do MyAnimeList |
+| Importação do MAL recusa o arquivo | Use a exportação da lista de **anime** (não a de mangá); `.xml` ou `.xml.gz` |
 | Calendário vazio | Atualize os horários pelo AniList ou preencha `airingDay`/`airingTime` |
 | Números estranhos | *Configurações › Diagnóstico* lista o que corrigir nas notas |

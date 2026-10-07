@@ -21,7 +21,8 @@
 //   AnimeVaultBrowse    Listas, Gêneros, Estúdios, Franquias, Temporadas
 //   AnimeVaultInsights  Calendário, Estatísticas, Tier List, Configurações
 //   AnimeVaultEditor    formulários (adicionar, editar, diário, análise…)
-//   AnimeVaultAniList   busca, artes e sync público do AniList
+//   AnimeVaultAniList   busca, artes, personagens e sync público do AniList
+//   AnimeVaultMAL       estatísticas e Top do MyAnimeList, XML, Integrações
 // ==========================================================================
 
 class AnimeVault {
@@ -33,7 +34,8 @@ class AnimeVault {
 			genres: ["B", "genres"], genre: ["B", "genre"], studios: ["B", "studios"], studio: ["B", "studio"],
 			franchises: ["B", "franchises"], franchise: ["B", "franchise"], seasons: ["B", "seasons"],
 			calendar: ["I", "calendar"], statistics: ["I", "statistics"], tierlist: ["I", "tierlist"], settings: ["I", "settings"],
-			anilist: ["AL", "page"]
+			anilist: ["AL", "page"], integrations: ["MAL", "integrations"],
+			profile: ["I", "profile"], ranking: ["I", "ranking"]
 		};
 		if (!window.__avHosts) window.__avHosts = new Set();
 		this._bindGlobalKeys();
@@ -52,7 +54,7 @@ class AnimeVault {
 		const j = typeof customJS !== "undefined" ? customJS : {};
 		return {
 			C: j.AnimeVaultCore, U: j.AnimeVaultUI, P: j.AnimeVaultPages, B: j.AnimeVaultBrowse,
-			I: j.AnimeVaultInsights, E: j.AnimeVaultEditor, AL: j.AnimeVaultAniList
+			I: j.AnimeVaultInsights, E: j.AnimeVaultEditor, AL: j.AnimeVaultAniList, MAL: j.AnimeVaultMAL
 		};
 	}
 
@@ -81,7 +83,7 @@ class AnimeVault {
 		try {
 			const route = this.routes[page];
 			if (!route) throw new Error(`Página desconhecida: ${page}`);
-			if (!M[route[0]]) throw new Error(`O módulo desta tela não foi carregado (${route[0] === "AL" ? "AnimeVaultAniList.js" : route[0]})`);
+			if (!M[route[0]]) throw new Error(`O módulo desta tela não foi carregado (${({ AL: "AnimeVaultAniList.js", MAL: "AnimeVaultMAL.js" })[route[0]] || route[0]})`);
 			res = await M[route[0]][route[1]](ctx);
 		} catch (err) {
 			console.error("Anime Vault: falha ao montar a página", page, err);
@@ -410,7 +412,8 @@ class AnimeVault {
 		return ["toggle-sidebar", "open-drawer", "close-drawer", "shelf-prev", "shelf-next", "menu", "search-open", "search-close", "obs",
 			"favorite", "ep-next", "ep-set", "ep-log", "quick", "status", "rewatch", "edit", "review", "rate", "feature-toggle", "delete-anime",
 			"add-anime", "random", "open-category", "identity-edit", "list-new", "list-edit", "list-toggle",
-			"anilist-connect", "anilist-sync", "anilist-refresh", "anilist-refresh-all", "anilist-art", "anilist-import", "anilist-import-all", "anilist-disconnect"].includes(a);
+			"anilist-connect", "anilist-sync", "anilist-refresh", "anilist-refresh-all", "anilist-art", "anilist-import", "anilist-import-all", "anilist-disconnect",
+			"mal-refresh", "mal-refresh-all", "mal-import", "mal-export"].includes(a);
 	}
 
 	open(path, ctx, newTab = false) {
@@ -495,6 +498,10 @@ class AnimeVault {
 			case "anilist-art": this._closeMenus(root); return AL ? AL.downloadArt(ctx, path ? [path] : null, el) : this._noAniList();
 			case "anilist-import": return AL ? AL.importEntries(ctx, [el.dataset.id], el) : this._noAniList();
 			case "anilist-import-all": return AL ? AL.importEntries(ctx, null, el) : this._noAniList();
+			case "mal-refresh": this._closeMenus(root); return ctx.MAL ? ctx.MAL.refresh(ctx, [path], el) : this._noMal();
+			case "mal-refresh-all": return ctx.MAL ? ctx.MAL.refresh(ctx, null, el) : this._noMal();
+			case "mal-import": return ctx.MAL ? ctx.MAL.openImport(ctx) : this._noMal();
+			case "mal-export": return ctx.MAL ? ctx.MAL.exportXml(ctx) : this._noMal();
 			case "anilist-disconnect": {
 				if (!AL) return;
 				const ok = await this.confirm({ title: "Desconectar o AniList?", text: "Remove o usuário e o cache do perfil deste dispositivo. Os animes e o progresso já gravados nas notas continuam.", confirm: "Desconectar", danger: true });
@@ -507,6 +514,7 @@ class AnimeVault {
 		void model; void U;
 	}
 
+	_noMal() { this.toast("O módulo AnimeVaultMAL.js não foi carregado", { tone: "warn" }); }
 	_noAniList() { this.toast("O módulo AnimeVaultAniList.js não foi carregado", { tone: "warn" }); }
 
 	// ------------------------------------------------------- progresso

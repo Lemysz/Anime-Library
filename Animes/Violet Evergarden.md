@@ -38,6 +38,12 @@ anilistId: "21827"
 malId: "33352"
 averageScore: 85
 link: ""
+source: "Light novel"
+demographic: []
+themes: []
+producers: []
+ageRating: ""
+broadcast: ""
 dateAdded: "2026-08-02"
 startDate: ""
 completionDate: ""

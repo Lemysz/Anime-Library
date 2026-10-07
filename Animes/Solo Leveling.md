@@ -38,6 +38,12 @@ anilistId: "151807"
 malId: "52299"
 averageScore: 81
 link: ""
+source: ""
+demographic: []
+themes: []
+producers: []
+ageRating: ""
+broadcast: ""
 dateAdded: "2026-09-30"
 startDate: ""
 completionDate: ""

@@ -38,6 +38,12 @@ anilistId: "1535"
 malId: "1535"
 averageScore: 84
 link: ""
+source: "Mangá"
+demographic: ["Shounen"]
+themes: []
+producers: []
+ageRating: ""
+broadcast: ""
 dateAdded: "2025-02-01"
 startDate: "2025-02-03"
 completionDate: "2025-03-04"
