@@ -1,0 +1,116 @@
+# Anime Vault: documentação
+
+Detalhes técnicos e de uso. A apresentação está no [README](README.md).
+
+## Estrutura
+
+```
+Dashboard/            telas do app (uma nota = uma tela)
+Animes/               uma nota por anime (frontmatter = dados)
+Lists/                listas personalizadas (campo `anime`)
+Genres/, Studios/, Franchises/   páginas de categoria (criadas no primeiro toque)
+Assets/Covers, Assets/Banners    artes baixadas do AniList ou escolhidas do aparelho
+Assets/animevault-boot.js        tela de carregamento e chamada do app
+Scripts/              código (CustomJS)
+.obsidian/snippets/animevault.css   visual
+.animevault/          cache do AniList (perfil, episódios, temporadas) — fora do git
+```
+
+Toda nota tem um único bloco:
+
+````
+```dataviewjs
+await dv.view("Assets/animevault-boot", { page: "anime" });
+```
+````
+
+O boot mostra a tela de carregamento enquanto o CustomJS não terminou de carregar e então chama `customJS.AnimeVault.render(dv, "anime")`. Na aba principal, o app é desenhado numa camada própria sobre a nota (como no Steam Vault), então fica igual no modo leitura e no modo edição. Para editar o texto da nota, use o modo código-fonte.
+
+Telas: `home`, `library`, `anime`, `history`, `lists`, `list`, `genres`, `genre`, `studios`, `studio`, `franchises`, `franchise`, `seasons`, `calendar`, `statistics`, `tierlist`, `settings`, `anilist`.
+
+## Scripts
+
+| Arquivo | Papel |
+|---|---|
+| `AnimeVault.js` | Entrada: roteamento, camada sobre a nota, tamanhos de tela, busca, menus, carrossel, gestos, avisos, janelas, progresso |
+| `AnimeVaultCore.js` | Modelo de dados e **fonte única** dos números (progresso, minutos, temporada, atividade, calendário) e escrita do progresso |
+| `AnimeVaultUI.js` | Componentes visuais (ícones, cards, miniaturas, fileiras, cabeçalho e navegação) |
+| `AnimeVaultPages.js` | Início, Minha biblioteca, ficha do anime, Histórico |
+| `AnimeVaultBrowse.js` | Listas, Gêneros, Estúdios, Franquias, Temporadas |
+| `AnimeVaultInsights.js` | Calendário, Estatísticas, Tier List, Configurações |
+| `AnimeVaultEditor.js` | Formulários: adicionar, editar, diário, análise e nota, listas, identidade, Surpreenda-me |
+| `AnimeVaultAniList.js` | API pública do AniList: busca, metadados, artes, sync do perfil, em alta na temporada |
+
+## Schema do anime
+
+| Campo | Uso |
+|---|---|
+| `title`, `titleRomaji`, `titleEnglish`, `titleNative` | Título exibido e alternativos (a busca procura em todos) |
+| `format` | `TV`, `TV_SHORT`, `MOVIE`, `OVA`, `ONA`, `SPECIAL`, `MUSIC` |
+| `status` | `Watching` (Assistindo), `Rewatching` (Reassistindo), `Paused`, `Planning` (Quero assistir), `Completed`, `Dropped`. Também aceita os nomes em português |
+| `episodes`, `episodesWatched`, `duration` | Total, quantos você viu, minutos por episódio. O tempo assistido sai daqui |
+| `log` | Diário: lista de `{ date, from, to, note }`. Cada "Assisti o E5" grava uma linha (juntando com a do dia) |
+| `season`, `seasonYear` | `WINTER`, `SPRING`, `SUMMER`, `FALL` + ano. Sem eles, a temporada sai de `airedFrom` |
+| `airingStatus`, `airedFrom`, `airedTo` | `RELEASING`, `FINISHED`, `NOT_YET_RELEASED`, `HIATUS`, `CANCELLED` |
+| `nextAiring` | `{ episode, at }`, escrito pelo AniList; alimenta o calendário e o selo "Novo episódio" |
+| `airingDay`, `airingTime` | Dia (ex.: `Sábado`) e hora fixos, para o calendário sem AniList |
+| `genre`, `studio`, `tags`, `franchise`, `franchiseOrder` | Organização. `franchiseOrder` define a ordem para assistir |
+| `audio`, `streaming`, `link` | `Legendado`/`Dublado`, onde assistir e o link (aparece no menu ⋮) |
+| `rating`, `tier`, `tierOrder`, `favorite` | Sua nota (0–5, meias estrelas), faixa da Tier List, favorito |
+| `review`, `pros`, `cons`, `recommend` | Minha análise |
+| `cover`, `banner`, `bgPosX`, `bgPosY` | Artes e enquadramento do banner. Sem arte, o app gera um fundo próprio |
+| `featuredOnHome` | `true` coloca no carrossel do Início. Sem nenhum marcado, o Vault escolhe (assistindo, favoritos, com arte) |
+| `anilistId`, `malId`, `averageScore` | Ligação com AniList/MyAnimeList |
+| `dateAdded`, `startDate`, `completionDate`, `lastWatched`, `rewatches` | Datas e quantas vezes você reassistiu |
+| `anilist` | Cache do último sync (não edite) |
+
+Listas: `anime: ["[[Animes/Frieren …]]", …]`, mais `title`, `description`, `icon`, `accent`, `cover`, `pinned`. A ordem do campo é a ordem da lista (↑ ↓ na página regravam).
+
+## Progresso e diário
+
+- **Assisti o E5** (ficha, card, menu rápido): marca o próximo episódio, grava no diário e oferece **Desfazer**.
+- **Tocar num episódio** da grade marca até ele; tocar no último assistido desmarca só ele.
+- Começar a assistir muda `Quero assistir`/`Pausado` para `Assistindo` e grava `startDate`. O último episódio conclui (`Completed` + `completionDate`) e oferece a nota.
+- **Reassistir** volta ao episódio 1 com status `Reassistindo`; o histórico da primeira vez continua contando.
+- **Registrar no diário** (menu ⋮ ou aba Diário): data, intervalo e uma nota. Registrar episódios já vistos só entra no diário, sem mudar o progresso.
+
+## AniList
+
+Tudo pela API pública (`graphql.anilist.co`), uma consulta por vez, com pausa automática se o AniList limitar. Nenhuma senha, login ou token.
+
+- **Adicionar anime:** busca por nome; o anime nasce com título, formato, episódios, duração, temporada, estúdio, gêneros (em português), sinopse, nota média, links de streaming, capa e banner baixados para `Assets/`. Dá para escolher o status na hora. Sem internet, use o formulário manual.
+- **Atualizar do AniList** (menu ⋮ ou Configurações): só metadados (episódios, situação, próximo episódio, artes que faltam). Título, status, progresso, nota e análise são seus e nunca mudam. Gêneros, estúdio e sinopse só são preenchidos se estiverem vazios. Um anime sem `anilistId` é ligado pelo título.
+- **Sync do perfil público** (Configurações ou menu da conta): informe o usuário. Para os animes ligados:
+  - progresso: vale o maior; a diferença entra no diário com a data da última atualização no AniList (`source: anilist`);
+  - status: segue o AniList quando o progresso de lá andou ou quando a nota está em "Quero assistir";
+  - datas, nota e reassistidas: só se estiverem vazias na nota.
+- **Tela AniList:** a sua lista, o que está fora do vault (Adicionar / Adicionar todos, já com progresso e nota) e os animes do vault sem `anilistId`.
+- **Temporadas:** "Em alta nesta temporada no AniList" (cache de 12 h), com um toque para adicionar em "Quero assistir".
+- **Episódios:** quando o AniList tem a lista de episódios de streaming, a grade mostra os títulos e miniaturas reais.
+
+## Aparência
+
+Visual inspirado na Crunchyroll: fundo preto, cabeçalho grafite, laranja `#f47521` como única cor de ação, fonte Lato, capas de cantos retos, botões em caixa alta, hover que revela sinopse e ações. O app é sempre escuro, como os apps de streaming.
+
+Em *Style Settings › Anime Vault*: cor de ação, largura das capas nas fileiras, modo aplicativo e barra de rolagem. Em *Configurações* do app: reduzir animações, sinopse no hover e vibração.
+
+## Celular
+
+- Cabeçalho compacto (logo, busca, conta) e barra inferior: Início, Biblioteca, Navegar, Calendário e Mais.
+- **Modo aplicativo** (Style Settings, ligado por padrão): nas telas do Anime Vault some o cabeçalho e a barra do Obsidian; o menu **Mais** traz os atalhos do Obsidian.
+- O topo das fichas usa a capa em pé, com o botão laranja em largura total, como no app da Crunchyroll.
+- Gestos: puxar o Início para baixo sincroniza o AniList; deslizar da borda esquerda volta; arrastar o topo de uma janela para baixo fecha; toque longo num card abre as ações rápidas.
+
+Atalhos: `/` ou `Ctrl/Cmd + K` para buscar (Enter sem resultado busca no AniList); `Esc` fecha menus e janelas.
+
+## Problemas comuns
+
+| Sintoma | Causa provável |
+|---|---|
+| "Anime Vault não carregou" | CustomJS desligado ou pasta de scripts diferente de `Scripts/` |
+| Bloco de código em vez da tela | Dataview sem *Enable JavaScript Queries*, ou nota em modo código-fonte |
+| Tela sem estilo | Snippet `animevault` desativado em *Aparência* |
+| Sem capas | Use *Configurações › Baixar capas e banners que faltam* (precisa de `anilistId`) |
+| "Esse perfil ou lista é privado" | A lista do AniList precisa ser pública para o sync |
+| Calendário vazio | Atualize os horários pelo AniList ou preencha `airingDay`/`airingTime` |
+| Números estranhos | *Configurações › Diagnóstico* lista o que corrigir nas notas |

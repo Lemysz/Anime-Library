@@ -1,0 +1,7 @@
+# Anime Vault — cache do AniList (perfil, episódios, temporadas)
+.animevault/
+# estado de janelas do Obsidian (muda a cada abertura)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+# lixeira local do Obsidian
+.trash/
