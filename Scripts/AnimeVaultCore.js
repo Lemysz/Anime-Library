@@ -11,7 +11,7 @@
 class AnimeVaultCore {
 
 	constructor() {
-		this.VERSION = "1.1.0";
+		this.VERSION = "1.2.0";
 
 		this.folders = {
 			anime: "Animes", lists: "Lists", genres: "Genres", studios: "Studios", franchises: "Franchises",
@@ -495,6 +495,26 @@ class AnimeVaultCore {
 			firstAdded: list.map(a => a.dateAdded).filter(Boolean).sort()[0] || ""
 		};
 	}
+
+	// nível de fã do cartão de membro (Perfil): sobe com as horas assistidas
+	fanTier(hours) {
+		const tiers = [
+			{ id: "starter", label: "Iniciante", min: 0 },
+			{ id: "bronze", label: "Bronze", min: 25 },
+			{ id: "silver", label: "Prata", min: 100 },
+			{ id: "gold", label: "Ouro", min: 300 },
+			{ id: "platinum", label: "Platina", min: 750 },
+			{ id: "diamond", label: "Diamante", min: 1500 }
+		];
+		const h = Number(hours) || 0;
+		let i = 0;
+		while (i + 1 < tiers.length && h >= tiers[i + 1].min) i++;
+		const cur = tiers[i], next = tiers[i + 1] || null;
+		return { ...cur, level: i, next, toNext: next ? Math.max(1, Math.ceil(next.min - h)) : 0, pct: next ? Math.min(100, ((h - cur.min) / (next.min - cur.min)) * 100) : 100 };
+	}
+
+	// nota máxima (5 estrelas ou 10 no MAL): selo dourado de obra-prima
+	isMasterpiece(a) { return this.score10(a?.rating) >= 10; }
 
 	groupBy(list, keyFn) {
 		const m = new Map();

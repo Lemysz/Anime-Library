@@ -182,7 +182,7 @@ class AnimeVaultPages {
 					${variant === "home" ? `<span class="av-hero-kicker">${p.newEpisode ? "Novo episódio" : ["Watching", "Rewatching"].includes(a.status) ? "Continue de onde parou" : a.featuredOnHome ? "Em destaque" : a.status === "Planning" ? "Na sua lista" : "Da sua biblioteca"}</span>` : a.franchise ? `<a class="av-hero-kicker" ${U.catAttrs("franchise", a.franchise, model.franchises.find(x => C.normalizeKey(x.title) === C.normalizeKey(a.franchise)))}>${U.esc(a.franchise)}</a>` : ""}
 					<h1 class="av-hero-title">${variant === "home" ? `<a ${U.openAttrs(a.path)}>${U.esc(a.title)}</a>` : U.esc(a.title)}</h1>
 					${variant === "page" && (a.titleNative || (a.titleRomaji && a.titleRomaji !== a.title)) ? `<p class="av-hero-alt">${U.esc([a.titleRomaji !== a.title ? a.titleRomaji : "", a.titleNative].filter(Boolean).join(" · "))}</p>` : ""}
-					<div class="av-hero-meta">${a.rating ? `<span class="av-hero-rate">${U.score(a.rating)}${C.scale() === 10 ? "" : `<b>${U.fmtNum(a.rating, 1)}</b>`}</span>` : ""}${a.mal.score ? `<span class="av-hero-mal" title="Nota no MyAnimeList">MAL ${U.fmtNum(a.mal.score, 2)}</span>` : ""}${meta.map(m => `<span>${U.esc(m)}</span>`).join("")}${a.airing === "RELEASING" ? `<span class="av-hero-live">Em lançamento</span>` : ""}</div>
+					<div class="av-hero-meta">${C.isMasterpiece(a) ? `<span class="av-hero-gold">${U.icon("crown")}Obra-prima</span>` : ""}${a.rating ? `<span class="av-hero-rate">${U.score(a.rating)}${C.scale() === 10 ? "" : `<b>${U.fmtNum(a.rating, 1)}</b>`}</span>` : ""}${a.mal.score ? `<span class="av-hero-mal" title="Nota no MyAnimeList">MAL ${U.fmtNum(a.mal.score, 2)}</span>` : ""}${meta.map(m => `<span>${U.esc(m)}</span>`).join("")}${a.airing === "RELEASING" ? `<span class="av-hero-live">Em lançamento</span>` : ""}</div>
 					${a.summary ? `<p class="av-hero-sum">${U.esc(a.summary)}</p>` : ""}
 					${genreLinks ? `<div class="av-hero-genres">${genreLinks}</div>` : ""}
 					<div class="av-hero-actions">${primary}${fav}${variant === "page" ? `<button type="button" class="av-btn av-btn--ghost av-btn--lg av-btn--icon" data-action="list-edit" data-path="${U.attr(a.path)}" title="Adicionar a uma lista" aria-label="Adicionar a uma lista">${U.icon("plus")}</button>` : ""}${menu}</div>
@@ -410,7 +410,7 @@ class AnimeVaultPages {
 			{ id: "diary", label: "Diário", count: a.log.length || null },
 			related.count || related.remote ? { id: "related", label: "Relacionados", count: related.count || null } : null
 		].filter(Boolean);
-		const html = `<div class="av-page av-page--anime" data-anime="${U.attr(a.path)}">
+		const html = `<div class="av-page av-page--anime" data-anime="${U.attr(a.path)}" style="--av-hue:${a.hue}">
 			${this.animeHero(ctx, a)}
 			<div class="av-animenav">${U.tabs(tabs, "episodes", { cls: "av-tabs--anime" })}</div>
 			<div class="av-pad av-animebody">

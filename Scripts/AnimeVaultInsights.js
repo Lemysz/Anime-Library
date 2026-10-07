@@ -267,8 +267,9 @@ class AnimeVaultInsights {
 				${cfg?.banner ? `<img class="av-profhero-art" src="${U.attr(cfg.banner)}" alt="" data-av-img>` : ""}
 				<div class="av-profhero-inner av-pad">
 					<span class="av-profavatar">${cfg?.avatar ? `<img src="${U.attr(cfg.avatar)}" alt="" data-av-img>` : `<b>${U.esc(name[0].toUpperCase())}</b>`}</span>
-					<div><span class="av-kicker">Perfil</span><h1>${U.esc(name)}</h1><p>${s.firstAdded ? `Na biblioteca desde ${U.esc(U.fmtDate(s.firstAdded))}` : "Biblioteca nova"} · ${U.plural(s.anime, "anime", "animes")}</p></div>
-					<div class="av-profhero-acts"><a class="av-btn av-btn--outline av-btn--sm" ${U.openAttrs("Dashboard/Integrações")}>${U.icon("link")}<span>Integrações</span></a></div>
+					<div class="av-profhero-id"><span class="av-kicker">Perfil</span><h1>${U.esc(name)}</h1><p>${s.firstAdded ? `Na biblioteca desde ${U.esc(U.fmtDate(s.firstAdded))}` : "Biblioteca nova"} · ${U.plural(s.anime, "anime", "animes")}</p>
+						<div class="av-profhero-links"><a class="av-btn av-btn--outline av-btn--sm" ${U.openAttrs("Dashboard/Integrações")}>${U.icon("link")}<span>Integrações</span></a></div></div>
+					${this._memberCard(ctx, name)}
 				</div>
 			</section>
 			<div class="av-pad av-profbody">
@@ -318,6 +319,24 @@ class AnimeVaultInsights {
 	// =============================================================== RANKING
 	// como o Top Anime do MyAnimeList: o seu ranking (por nota, nota do MAL,
 	// popularidade ou tempo) e o Top do MAL para descobrir e adicionar
+	// cartão de membro: nível de fã pelas horas assistidas, com a barra até o próximo
+	_memberCard(ctx, name) {
+		const { C, U, model } = ctx;
+		const s = model.stats;
+		const t = C.fanTier(s.hours);
+		const since = s.firstAdded ? s.firstAdded.slice(0, 4) : String(new Date().getFullYear());
+		return `<div class="av-membercard av-tier-${U.attr(t.id)}" aria-label="Cartão de membro ${U.attr(t.label)}">
+			<div class="av-membercard-top"><span class="av-membercard-brand">${U.icon("mark")}<span>Anime<b>Vault</b></span></span><span class="av-membercard-tier">${U.icon("crown")}${U.esc(t.label)}</span></div>
+			<div class="av-membercard-name">${U.esc(name)}</div>
+			<div class="av-membercard-stats">
+				<span><b>${U.fmtNum(s.days, 1)}</b><small>dias</small></span>
+				<span><b>${U.fmtNum(s.episodes)}</b><small>episódios</small></span>
+				<span><b>${U.esc(since)}</b><small>membro desde</small></span>
+			</div>
+			<div class="av-membercard-next">${t.next ? `<div class="av-membercard-bar"><span style="width:${t.pct.toFixed(1)}%"></span></div><small>${U.esc(U.plural(t.toNext, "hora", "horas"))} para ${U.esc(t.next.label)}</small>` : `<small>Nível máximo. Lenda da biblioteca.</small>`}</div>
+		</div>`;
+	}
+
 	ranking(ctx) {
 		const { C, U, model } = ctx;
 		const sorts = { mine: "Sua nota", mal: "Nota do MAL", popular: "Popularidade", time: "Mais assistidos" };
@@ -419,6 +438,7 @@ class AnimeVaultInsights {
 			</section>
 			<section class="av-setcard">
 				<header>${U.icon("gear")}<div><h3>Preferências</h3><p>Valem só neste dispositivo.</p></div></header>
+				<div class="av-setrow av-setrow--scale"><span>Visual</span><div class="av-segmented" role="radiogroup"><button type="button" data-look="premium" class="${U._store("look") === "classic" ? "" : "is-active"}">✦ Premium</button><button type="button" data-look="classic" class="${U._store("look") === "classic" ? "is-active" : ""}">Clássico</button></div></div>
 				<div class="av-setrow av-setrow--scale"><span>Escala de notas</span><div class="av-segmented" role="radiogroup"><button type="button" data-scale="5" class="${C.scale() === 10 ? "" : "is-active"}">★ 5 estrelas</button><button type="button" data-scale="10" class="${C.scale() === 10 ? "is-active" : ""}">1–10 (MAL)</button></div></div>
 				${sw("reducedMotion", "Reduzir animações", "Desliga entradas, carrossel automático e transições", U._store("reducedMotion") === "1")}
 				${sw("hoverSummary", "Sinopse ao passar o mouse", "Os cards mostram título, nota e sinopse no hover", U._store("hoverSummary") !== "0")}
@@ -441,6 +461,12 @@ class AnimeVaultInsights {
 		return {
 			active: "settings", html, wire: root => {
 				root.querySelectorAll("[data-scale]").forEach(b => b.addEventListener("click", () => { U._store("scale", b.dataset.scale); ctx.V.toast(b.dataset.scale === "10" ? "Notas de 1 a 10 (MyAnimeList)" : "Notas em 5 estrelas", { tone: "ok" }); ctx.V.refresh(); }));
+				root.querySelectorAll("[data-look]").forEach(b => b.addEventListener("click", () => {
+					U._store("look", b.dataset.look);
+					root.querySelectorAll("[data-look]").forEach(x => x.classList.toggle("is-active", x === b));
+					ctx.V._applyPrefs();
+					ctx.V.toast(b.dataset.look === "classic" ? "Visual clássico: cantos retos e cabeçalho sólido" : "Visual Premium ligado", { tone: "ok" });
+				}));
 				root.querySelectorAll("[data-pref]").forEach(cb => cb.addEventListener("change", async () => {
 					const k = cb.dataset.pref;
 					if (k === "alAuto") { await AL?.saveConfig({ autoSync: cb.checked }); return ctx.V.toast(cb.checked ? "Sync ao abrir ligado" : "Sync ao abrir desligado", { tone: "ok" }); }

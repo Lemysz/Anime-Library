@@ -106,9 +106,26 @@ Tudo pela API pública (`graphql.anilist.co`), uma consulta por vez, com pausa a
 
 ## Aparência
 
-Visual inspirado na Crunchyroll: fundo preto, cabeçalho grafite, laranja `#f47521` como única cor de ação, fonte Lato, capas de cantos retos, botões em caixa alta, hover que revela sinopse e ações. O app é sempre escuro, como os apps de streaming.
+Identidade inspirada na Crunchyroll: palco escuro, laranja `#f47521` como cor de ação, fonte Lato, hover que revela sinopse e ações. O app é sempre escuro, como os apps de streaming. Há dois visuais, em *Configurações › Preferências › Visual*:
 
-Em *Style Settings › Anime Vault*: cor de ação, largura das capas nas fileiras, modo aplicativo e barra de rolagem. Em *Configurações* do app: reduzir animações, sinopse no hover e vibração.
+- **Premium** (padrão, 1.2.0):
+  - Cabeçalho de vidro que flutua transparente sobre o destaque e ganha desfoque ao rolar.
+  - Títulos em Plus Jakarta Sans e cantos arredondados.
+  - Botões laranja com degradê e brilho, gêneros e botões secundários em vidro.
+  - Arte do destaque com zoom lento (some com *Reduzir animações*) e grão de filme leve.
+  - Cards que sobem no hover com um brilho na cor da arte.
+  - Brilho ambiente na ficha do anime.
+  - Menus, janelas e avisos em vidro fosco.
+  - Gráficos com colunas arredondadas.
+- **Clássico**: o visual da 1.1, com cantos retos, cabeçalho grafite sólido e botões chapados.
+
+Os dois visuais têm ainda:
+
+- **Obra-prima**: nota máxima (5 estrelas ou 10) ganha uma coroa dourada no card e o selo *Obra-prima* no destaque.
+- **Ranking**: os três primeiros aparecem em dourado.
+- **Cartão de membro** (Perfil): mostra o seu nível de fã pelas horas assistidas. Os níveis são Iniciante, Bronze (25 h), Prata (100 h), Ouro (300 h), Platina (750 h) e Diamante (1.500 h). O cartão traz dias, episódios, o ano em que você começou e quanto falta para o próximo nível. O nível também aparece no menu da conta.
+
+Em *Style Settings › Anime Vault*: cor de ação (o degradê e o brilho acompanham), largura das capas nas fileiras, modo aplicativo e barra de rolagem. Em *Configurações* do app: visual, reduzir animações, sinopse no hover e vibração.
 
 ## Celular
 
@@ -126,6 +143,7 @@ Atalhos: `/` ou `Ctrl/Cmd + K` para buscar (Enter sem resultado busca no AniList
 | "Anime Vault não carregou" | CustomJS desligado ou pasta de scripts diferente de `Scripts/` |
 | Bloco de código em vez da tela | Dataview sem *Enable JavaScript Queries*, ou nota em modo código-fonte |
 | Tela sem estilo | Snippet `animevault` desativado em *Aparência* |
+| Títulos com outra fonte | Sem internet, a Plus Jakarta Sans não carrega e os títulos usam a Lato |
 | Sem capas | Use *Configurações › Baixar capas e banners que faltam* (precisa de `anilistId`) |
 | "Esse perfil ou lista é privado" | A lista do AniList precisa ser pública para o sync |
 | "Nota MAL" em N/A | Falta `malId` ou ainda não foi atualizado: menu ⋮ › Atualizar do MyAnimeList |

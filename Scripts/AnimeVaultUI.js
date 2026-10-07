@@ -318,11 +318,13 @@ class AnimeVaultUI {
 			: a.airing === "RELEASING" ? `<span class="av-card-badge">Em lançamento</span>`
 			: a.airing === "NOT_YET_RELEASED" ? `<span class="av-card-badge is-soon">Em breve</span>` : "";
 		const nextLabel = p.next ? (C.isMovie(a) ? "Assistir" : `E${p.next}`) : "Reassistir";
-		return `<article class="av-card${size ? ` av-card--${size}` : ""}${a.favorite ? " is-favorite" : ""}" data-anime="${this.attr(a.path)}" style="--av-hue:${a.hue}">
+		const gold = C.isMasterpiece(a);
+		return `<article class="av-card${size ? ` av-card--${size}` : ""}${a.favorite ? " is-favorite" : ""}${gold ? " is-gold" : ""}" data-anime="${this.attr(a.path)}" style="--av-hue:${a.hue}">
 			<a class="av-card-link" ${this.openAttrs(a.path)} aria-label="${this.attr(a.title)}">
 				<div class="av-card-art">
 					${this.cover(a)}
 					${badge}
+					${gold ? `<span class="av-card-crown" title="Obra-prima">${this.icon("crown")}</span>` : ""}
 					${rank ? `<span class="av-card-rank">${rank}</span>` : ""}
 					${showBar ? `<div class="av-card-bar"><span style="width:${p.pct}%"></span></div>` : ""}
 				</div>
@@ -450,7 +452,7 @@ class AnimeVaultUI {
 	// Barra superior preta (logo, navegação, busca, conta), como na
 	// Crunchyroll. No celular: logo + busca + conta no topo e a barra de
 	// navegação embaixo.
-	shell({ active, content, C, cfg = null }) {
+	shell({ active, content, C, cfg = null, tier = null }) {
 		const P = this.pages;
 		const browseIds = ["genres", "studios", "franchises", "seasons"];
 		const topActive = ["anime", "list"].includes(active) ? (active === "list" ? "lists" : "library")
@@ -487,6 +489,7 @@ class AnimeVaultUI {
 						<button type="button" class="av-header-btn av-avatar" data-action="menu" aria-haspopup="true" aria-expanded="false" title="Conta">${avatar}</button>
 						<div class="av-menu av-account-menu" role="menu" hidden>
 							<div class="av-account-head"><span class="av-account-avatar">${avatar}</span><span class="av-account-id"><b>${this.esc(connected ? cfg.user : "Anime Vault")}</b><small class="av-account-state${connected ? " is-on" : ""}">${connected ? (cfg.lastSync ? `AniList · sync ${this.esc(this.relDate(String(cfg.lastSync).slice(0, 10)))}` : "AniList conectado") : "AniList não conectado"}</small></span></div>
+							${tier ? `<a class="av-account-tier av-tier-${this.attr(tier.id)}" ${this.openAttrs(P.profile.path)}>${this.icon("crown")}<span>Membro <b>${this.esc(tier.label)}</b></span>${tier.next ? `<small>${this.esc(this.plural(tier.toNext, "hora", "horas"))} para ${this.esc(tier.next.label)}</small>` : ""}</a>` : ""}
 							${connected ? `<button role="menuitem" data-action="anilist-sync">${this.icon("refresh")}Sincronizar AniList</button>` : `<button role="menuitem" data-action="anilist-connect">${this.icon("link")}Conectar AniList</button>`}
 							<div class="av-menu-sep"></div>
 							${["profile", "history", "statistics", "tierlist", "integrations", "settings"].map(id => `<a role="menuitem" ${this.openAttrs(P[id].path)}>${this.icon(P[id].icon)}${this.esc(P[id].label)}</a>`).join("")}

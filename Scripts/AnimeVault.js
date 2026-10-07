@@ -93,7 +93,7 @@ class AnimeVault {
 		const surface = this._surface(host);
 		const preScroller = surface.scroller || host.parentElement;
 		const preW = this._viewWidth(surface.layer ? surface.el.clientWidth : preScroller?.clientWidth);
-		surface.el.innerHTML = M.U.shell({ active: res.active, content: res.html, C: M.C, cfg: M.AL ? M.AL.getConfig() : null });
+		surface.el.innerHTML = M.U.shell({ active: res.active, content: res.html, C: M.C, cfg: M.AL ? M.AL.getConfig() : null, tier: model?.stats ? M.C.fanTier(model.stats.hours) : null });
 		const root = surface.el.querySelector(".av-app");
 		root.dataset.page = page;
 		root.classList.add("av-instant");
@@ -351,6 +351,7 @@ class AnimeVault {
 		document.body.classList.toggle("av-reduced-motion", U._store("reducedMotion") === "1");
 		document.body.classList.toggle("av-no-haptics", U._store("haptics") === "0");
 		document.body.classList.toggle("av-no-hover-sum", U._store("hoverSummary") === "0");
+		document.body.classList.toggle("av-classic", U._store("look") === "classic");
 	}
 
 	// posição de rolagem sobrevive ao re-render automático do Dataview
