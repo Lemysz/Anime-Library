@@ -302,7 +302,7 @@ class AnimeVaultInsights {
 					<h3>Distribuição das suas notas</h3>
 					${rated.length ? `<div class="av-dist">${dist.map(x => `<div class="av-dist-row"><span>${x.k}${ten ? "" : ` ${U.icon("starFill")}`}</span><span class="av-dist-bar"><i style="width:${(x.n / dMax) * 100}%"></i></span><b>${x.n || ""}</b></div>`).join("")}</div>` : `<p class="av-muted">Nenhum anime avaliado.</p>`}
 				</section>
-				<section class="av-malbox">
+				<section class="av-malbox av-profgenres">
 					<h3>Gêneros que você mais assiste</h3>
 					${genres.length ? `<div class="av-chiplinks">${genres.map(([g, l]) => `<a class="av-chiplink" data-action="open-category" data-kind="genre" data-name="${U.attr(g)}" href="#">${U.esc(C.genreLabel(g))}<span class="av-chiplink-n">${l.length}</span></a>`).join("")}</div>` : `<p class="av-muted">—</p>`}
 				</section>
@@ -326,7 +326,7 @@ class AnimeVaultInsights {
 		const t = C.fanTier(s.hours);
 		const since = s.firstAdded ? s.firstAdded.slice(0, 4) : String(new Date().getFullYear());
 		return `<div class="av-membercard av-tier-${U.attr(t.id)}" aria-label="Cartão de membro ${U.attr(t.label)}">
-			<div class="av-membercard-top"><span class="av-membercard-brand">${U.icon("mark")}<span>Anime<b>Vault</b></span></span><span class="av-membercard-tier">${U.icon("crown")}${U.esc(t.label)}</span></div>
+			<div class="av-membercard-top"><span class="av-membercard-brand">${U.icon("mark")}<span>Anime<b>Vault</b></span></span><span class="av-membercard-tier"><i class="av-tier-dot"></i>${U.esc(t.label)}</span></div>
 			<div class="av-membercard-name">${U.esc(name)}</div>
 			<div class="av-membercard-stats">
 				<span><b>${U.fmtNum(s.days, 1)}</b><small>dias</small></span>
@@ -438,7 +438,7 @@ class AnimeVaultInsights {
 			</section>
 			<section class="av-setcard">
 				<header>${U.icon("gear")}<div><h3>Preferências</h3><p>Valem só neste dispositivo.</p></div></header>
-				<div class="av-setrow av-setrow--scale"><span>Visual</span><div class="av-segmented" role="radiogroup"><button type="button" data-look="premium" class="${U._store("look") === "classic" ? "" : "is-active"}">✦ Premium</button><button type="button" data-look="classic" class="${U._store("look") === "classic" ? "is-active" : ""}">Clássico</button></div></div>
+				<div class="av-setrow av-setrow--scale"><span>Visual<small>Automático usa o visual Minimal quando o tema Minimal está ativo</small></span><div class="av-segmented" role="radiogroup">${[["auto", "Automático"], ["vault", "Vault"], ["minimal", "Minimal"]].map(([k, l]) => `<button type="button" data-look="${k}" class="${(["vault", "minimal"].includes(U._store("look")) ? U._store("look") : "auto") === k ? "is-active" : ""}">${l}</button>`).join("")}</div></div>
 				<div class="av-setrow av-setrow--scale"><span>Escala de notas</span><div class="av-segmented" role="radiogroup"><button type="button" data-scale="5" class="${C.scale() === 10 ? "" : "is-active"}">★ 5 estrelas</button><button type="button" data-scale="10" class="${C.scale() === 10 ? "is-active" : ""}">1–10 (MAL)</button></div></div>
 				${sw("reducedMotion", "Reduzir animações", "Desliga entradas, carrossel automático e transições", U._store("reducedMotion") === "1")}
 				${sw("hoverSummary", "Sinopse ao passar o mouse", "Os cards mostram título, nota e sinopse no hover", U._store("hoverSummary") !== "0")}
@@ -465,7 +465,7 @@ class AnimeVaultInsights {
 					U._store("look", b.dataset.look);
 					root.querySelectorAll("[data-look]").forEach(x => x.classList.toggle("is-active", x === b));
 					ctx.V._applyPrefs();
-					ctx.V.toast(b.dataset.look === "classic" ? "Visual clássico: cantos retos e cabeçalho sólido" : "Visual Premium ligado", { tone: "ok" });
+					ctx.V.toast(b.dataset.look === "minimal" ? "Visual Minimal: segue as cores e a fonte do seu tema" : b.dataset.look === "vault" ? "Visual Vault" : "Visual automático: acompanha o tema do Obsidian", { tone: "ok" });
 				}));
 				root.querySelectorAll("[data-pref]").forEach(cb => cb.addEventListener("change", async () => {
 					const k = cb.dataset.pref;

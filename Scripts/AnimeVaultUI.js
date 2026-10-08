@@ -113,7 +113,8 @@ class AnimeVaultUI {
 			history: `<path d="M3.5 12a8.5 8.5 0 1 0 2.5-6L3.5 8.5"/><path d="M3.5 4v4.5H8M12 7.5V12l3 2"/>`,
 			star: `<path d="m12 3.3 2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.6l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/>`,
 			starFill: `<path fill="currentColor" stroke="none" d="m12 3.3 2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.6l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/>`,
-			heart: `<path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.3 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/>`,
+			heart: `<path d="M12 20.2s-7.6-4.5-8.9-9.3C2.3 7.8 4.3 4.8 7.4 4.8c1.9 0 3.5 1 4.6 2.6 1.1-1.6 2.7-2.6 4.6-2.6 3.1 0 5.1 3 4.3 6.1-1.3 4.8-8.9 9.3-8.9 9.3z"/>`,
+			heartFill: `<path fill="currentColor" d="M12 20.2s-7.6-4.5-8.9-9.3C2.3 7.8 4.3 4.8 7.4 4.8c1.9 0 3.5 1 4.6 2.6 1.1-1.6 2.7-2.6 4.6-2.6 3.1 0 5.1 3 4.3 6.1-1.3 4.8-8.9 9.3-8.9 9.3z"/>`,
 			bookmark: `<path d="M6.5 3.5h11v17L12 16.5l-5.5 4z"/>`,
 			bookmarkFill: `<path fill="currentColor" d="M6.5 3.5h11v17L12 16.5l-5.5 4z"/>`,
 			play: `<path fill="currentColor" stroke="none" d="M7.5 4.6c0-.8.9-1.3 1.6-.9l11 6.9c.6.4.6 1.4 0 1.8l-11 6.9c-.7.4-1.6-.1-1.6-.9z"/>`,
@@ -318,13 +319,13 @@ class AnimeVaultUI {
 			: a.airing === "RELEASING" ? `<span class="av-card-badge">Em lançamento</span>`
 			: a.airing === "NOT_YET_RELEASED" ? `<span class="av-card-badge is-soon">Em breve</span>` : "";
 		const nextLabel = p.next ? (C.isMovie(a) ? "Assistir" : `E${p.next}`) : "Reassistir";
-		const gold = C.isMasterpiece(a);
-		return `<article class="av-card${size ? ` av-card--${size}` : ""}${a.favorite ? " is-favorite" : ""}${gold ? " is-gold" : ""}" data-anime="${this.attr(a.path)}" style="--av-hue:${a.hue}">
+		const top = C.isMasterpiece(a);
+		return `<article class="av-card${size ? ` av-card--${size}` : ""}${a.favorite ? " is-favorite" : ""}${top ? " is-top" : ""}" data-anime="${this.attr(a.path)}" style="--av-hue:${a.hue}">
 			<a class="av-card-link" ${this.openAttrs(a.path)} aria-label="${this.attr(a.title)}">
 				<div class="av-card-art">
 					${this.cover(a)}
 					${badge}
-					${gold ? `<span class="av-card-crown" title="Obra-prima">${this.icon("crown")}</span>` : ""}
+					${a.favorite ? `<span class="av-card-fav" title="Favorito">${this.icon("heartFill")}</span>` : ""}
 					${rank ? `<span class="av-card-rank">${rank}</span>` : ""}
 					${showBar ? `<div class="av-card-bar"><span style="width:${p.pct}%"></span></div>` : ""}
 				</div>
@@ -341,7 +342,7 @@ class AnimeVaultUI {
 			</a>
 			<div class="av-card-acts">
 				<button type="button" class="av-card-act" data-action="ep-next" data-path="${this.attr(a.path)}" title="${p.next ? `Marcar ${this.attr(nextLabel)} como assistido` : "Reassistir"}" aria-label="${p.next ? `Marcar ${this.attr(nextLabel)} como assistido` : "Reassistir"}">${this.icon("play")}</button>
-				<button type="button" class="av-card-act av-fav${a.favorite ? " is-on" : ""}" data-action="favorite" data-path="${this.attr(a.path)}" aria-pressed="${a.favorite}" title="${a.favorite ? "Remover dos favoritos" : "Favoritar"}" aria-label="${a.favorite ? "Remover dos favoritos" : "Favoritar"}">${this.icon(a.favorite ? "bookmarkFill" : "bookmark")}</button>
+				<button type="button" class="av-card-act av-fav${a.favorite ? " is-on" : ""}" data-action="favorite" data-path="${this.attr(a.path)}" aria-pressed="${a.favorite}" title="${a.favorite ? "Remover dos favoritos" : "Favoritar"}" aria-label="${a.favorite ? "Remover dos favoritos" : "Favoritar"}">${this.icon(a.favorite ? "heartFill" : "heart")}</button>
 				<button type="button" class="av-card-act" data-action="quick" data-path="${this.attr(a.path)}" title="Mais ações" aria-label="Mais ações">${this.icon("plus")}</button>
 			</div>
 		</article>`;
@@ -489,7 +490,7 @@ class AnimeVaultUI {
 						<button type="button" class="av-header-btn av-avatar" data-action="menu" aria-haspopup="true" aria-expanded="false" title="Conta">${avatar}</button>
 						<div class="av-menu av-account-menu" role="menu" hidden>
 							<div class="av-account-head"><span class="av-account-avatar">${avatar}</span><span class="av-account-id"><b>${this.esc(connected ? cfg.user : "Anime Vault")}</b><small class="av-account-state${connected ? " is-on" : ""}">${connected ? (cfg.lastSync ? `AniList · sync ${this.esc(this.relDate(String(cfg.lastSync).slice(0, 10)))}` : "AniList conectado") : "AniList não conectado"}</small></span></div>
-							${tier ? `<a class="av-account-tier av-tier-${this.attr(tier.id)}" ${this.openAttrs(P.profile.path)}>${this.icon("crown")}<span>Membro <b>${this.esc(tier.label)}</b></span>${tier.next ? `<small>${this.esc(this.plural(tier.toNext, "hora", "horas"))} para ${this.esc(tier.next.label)}</small>` : ""}</a>` : ""}
+							${tier ? `<a class="av-account-tier av-tier-${this.attr(tier.id)}" ${this.openAttrs(P.profile.path)}><i class="av-tier-dot"></i><span>Membro <b>${this.esc(tier.label)}</b></span>${tier.next ? `<small>${this.esc(this.plural(tier.toNext, "hora", "horas"))} para ${this.esc(tier.next.label)}</small>` : ""}</a>` : ""}
 							${connected ? `<button role="menuitem" data-action="anilist-sync">${this.icon("refresh")}Sincronizar AniList</button>` : `<button role="menuitem" data-action="anilist-connect">${this.icon("link")}Conectar AniList</button>`}
 							<div class="av-menu-sep"></div>
 							${["profile", "history", "statistics", "tierlist", "integrations", "settings"].map(id => `<a role="menuitem" ${this.openAttrs(P[id].path)}>${this.icon(P[id].icon)}${this.esc(P[id].label)}</a>`).join("")}

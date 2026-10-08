@@ -11,7 +11,7 @@
 class AnimeVaultCore {
 
 	constructor() {
-		this.VERSION = "1.2.0";
+		this.VERSION = "1.3.0";
 
 		this.folders = {
 			anime: "Animes", lists: "Lists", genres: "Genres", studios: "Studios", franchises: "Franchises",
@@ -29,12 +29,12 @@ class AnimeVaultCore {
 		};
 		// como o MyAnimeList chama e colore cada status (lista em tabela, perfil, XML)
 		this.malStatus = {
-			Watching:   { mal: "Watching",      label: "Assistindo",     color: "#2db039" },
-			Rewatching: { mal: "Watching",      label: "Reassistindo",   color: "#2db039" },
-			Completed:  { mal: "Completed",     label: "Concluído",      color: "#26448f" },
-			Paused:     { mal: "On-Hold",       label: "Em espera",      color: "#f9d457" },
-			Dropped:    { mal: "Dropped",       label: "Abandonado",     color: "#a12f31" },
-			Planning:   { mal: "Plan to Watch", label: "Planejo assistir", color: "#c3c3c3" }
+			Watching:   { mal: "Watching",      label: "Assistindo",     color: "#3ddc97" },
+			Rewatching: { mal: "Watching",      label: "Reassistindo",   color: "#3ddc97" },
+			Completed:  { mal: "Completed",     label: "Concluído",      color: "#5b8def" },
+			Paused:     { mal: "On-Hold",       label: "Em espera",      color: "#ffc857" },
+			Dropped:    { mal: "Dropped",       label: "Abandonado",     color: "#ff5d6c" },
+			Planning:   { mal: "Plan to Watch", label: "Planejo assistir", color: "#a6aec0" }
 		};
 		this.malStatusIn = { "watching": "Watching", "completed": "Completed", "on-hold": "Paused", "on hold": "Paused", "dropped": "Dropped", "plan to watch": "Planning", "1": "Watching", "2": "Completed", "3": "Paused", "4": "Dropped", "6": "Planning" };
 		// a escala de 10 do MyAnimeList (nota interna 0–5 em meias estrelas = 0–10)

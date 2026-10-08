@@ -351,7 +351,16 @@ class AnimeVault {
 		document.body.classList.toggle("av-reduced-motion", U._store("reducedMotion") === "1");
 		document.body.classList.toggle("av-no-haptics", U._store("haptics") === "0");
 		document.body.classList.toggle("av-no-hover-sum", U._store("hoverSummary") === "0");
-		document.body.classList.toggle("av-classic", U._store("look") === "classic");
+		// visual: "auto" segue o tema do Obsidian (Minimal ativo → visual Minimal)
+		const look = U._store("look") || "auto";
+		const theme = String(window.app?.customCss?.theme || "");
+		const minimal = look === "minimal" || (look !== "vault" && /^minimal$/i.test(theme));
+		document.body.classList.toggle("av-minimal", minimal);
+		document.body.classList.remove("av-classic");
+		if (!this.__avCssHook && window.app?.workspace?.on) {
+			this.__avCssHook = true;
+			try { app.workspace.on("css-change", () => this._applyPrefs()); } catch (_) {}
+		}
 	}
 
 	// posição de rolagem sobrevive ao re-render automático do Dataview
@@ -595,7 +604,7 @@ class AnimeVault {
 			<div class="av-qm-actions">
 				${a.progress.next !== null ? `<button type="button" class="av-qm-act is-primary" data-qm="next">${U.icon("play")}<span>${C.isMovie(a) ? "Marcar como assistido" : `Assisti o E${a.progress.next}`}</span></button>` : `<button type="button" class="av-qm-act" data-qm="rewatch">${U.icon("repeat")}<span>Reassistir</span></button>`}
 				<button type="button" class="av-qm-act" data-qm="log">${U.icon("notebook")}<span>Registrar no diário</span></button>
-				<button type="button" class="av-qm-act${a.favorite ? " is-on" : ""}" data-qm="fav">${U.icon(a.favorite ? "bookmarkFill" : "bookmark")}<span>${a.favorite ? "Nos favoritos" : "Favoritar"}</span></button>
+				<button type="button" class="av-qm-act${a.favorite ? " is-on" : ""}" data-qm="fav">${U.icon(a.favorite ? "heartFill" : "heart")}<span>${a.favorite ? "Nos favoritos" : "Favoritar"}</span></button>
 				<button type="button" class="av-qm-act" data-qm="open">${U.icon("eye")}<span>Abrir ficha</span></button>
 			</div>
 			<section class="av-fgroup"><h4>Status</h4><div class="av-fchips">${Object.keys(C.statusDefs).map(k => `<button type="button" class="av-fchip${a.status === k ? " is-active" : ""}" data-qm-status="${k}"><i class="av-dot av-tone-${C.statusDefs[k].tone}"></i>${U.esc(C.statusLabel(k))}</button>`).join("")}</div></section>
@@ -1238,7 +1247,7 @@ class AnimeVault {
 			b.classList.toggle("is-on", on); b.setAttribute("aria-pressed", String(on));
 			b.title = on ? "Remover dos favoritos" : "Favoritar";
 			const svg = b.querySelector("svg");
-			if (svg) svg.outerHTML = U.icon(on ? "bookmarkFill" : "bookmark");
+			if (svg) svg.outerHTML = U.icon(on ? "heartFill" : "heart");
 			const label = b.querySelector("span");
 			if (label && b.classList.contains("av-btn")) label.textContent = on ? "Nos favoritos" : "Favoritar";
 			if (on && this._motionOn()) { b.classList.remove("is-pop"); void b.offsetWidth; b.classList.add("is-pop"); setTimeout(() => b.classList.remove("is-pop"), 600); }
@@ -1246,7 +1255,7 @@ class AnimeVault {
 		if (on) this._haptic(14);
 		try {
 			await app.fileManager.processFrontMatter(file, fm => { fm.favorite = on; });
-			this.toast(on ? "Adicionado aos favoritos" : "Removido dos favoritos", { icon: on ? "bookmarkFill" : "bookmark", tone: on ? "ok" : "" });
+			this.toast(on ? "Adicionado aos favoritos" : "Removido dos favoritos", { icon: on ? "heartFill" : "heart", tone: on ? "ok" : "" });
 		} catch (err) { this.toast(`Não foi possível salvar: ${err.message}`, { tone: "error" }); }
 	}
 

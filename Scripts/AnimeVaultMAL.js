@@ -362,7 +362,7 @@ class AnimeVaultMAL {
 			</div>
 			<section class="av-setcard">
 				<header>${U.icon("starFill")}<div><h3>Escala de notas</h3><p>Como as notas aparecem e são dadas em todo o Vault. A nota fica guardada igual (5 estrelas com meia = 10 pontos).</p></div></header>
-				<div class="av-segmented" role="radiogroup"><button type="button" data-scale="5" class="${ten ? "" : "is-active"}">★ 5 estrelas (Crunchyroll)</button><button type="button" data-scale="10" class="${ten ? "is-active" : ""}">1–10 (MyAnimeList)</button></div>
+				<div class="av-segmented" role="radiogroup"><button type="button" data-scale="5" class="${ten ? "" : "is-active"}">★ 5 estrelas</button><button type="button" data-scale="10" class="${ten ? "is-active" : ""}">1–10 (MAL)</button></div>
 			</section>
 			<section class="av-setcard">
 				<header>${U.icon("play")}<div><h3>Onde assistir</h3><p>O campo <code>link</code> de cada anime (Crunchyroll, Netflix…) aparece no menu ⋮ e na ficha. Ao adicionar pelo AniList, o link da Crunchyroll entra sozinho quando existe.</p></div></header>

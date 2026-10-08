@@ -106,26 +106,30 @@ Tudo pela API pública (`graphql.anilist.co`), uma consulta por vez, com pausa a
 
 ## Aparência
 
-Identidade inspirada na Crunchyroll: palco escuro, laranja `#f47521` como cor de ação, fonte Lato, hover que revela sinopse e ações. O app é sempre escuro, como os apps de streaming. Há dois visuais, em *Configurações › Preferências › Visual*:
+Identidade inspirada na Crunchyroll: laranja `#f47521` como cor de ação, hover que revela sinopse e ações, fileiras e miniaturas de episódio. Há dois visuais, em *Configurações › Preferências › Visual*:
 
-- **Premium** (padrão, 1.2.0):
+- **Automático** (padrão): usa o visual Minimal quando o tema Minimal está ativo no Obsidian e o visual Vault nos outros temas. Troca sozinho quando você muda de tema.
+- **Vault**: o visual de app de streaming, sempre escuro.
+  - Palco azul-grafite com superfícies em degraus e cores de status vivas (revisado na 1.3.0, menos preto chapado).
   - Cabeçalho de vidro que flutua transparente sobre o destaque e ganha desfoque ao rolar.
-  - Títulos em Plus Jakarta Sans e cantos arredondados.
-  - Botões laranja com degradê e brilho, gêneros e botões secundários em vidro.
-  - Arte do destaque com zoom lento (some com *Reduzir animações*) e grão de filme leve.
-  - Cards que sobem no hover com um brilho na cor da arte.
-  - Brilho ambiente na ficha do anime.
+  - Títulos em Plus Jakarta Sans e cantos arredondados em tudo.
+  - Botão laranja com degradê; gêneros e botões secundários em vidro.
+  - Arte do destaque com zoom lento (some com *Reduzir animações*).
+  - Cards que sobem no hover com um brilho na cor da arte; brilho ambiente na ficha.
   - Menus, janelas e avisos em vidro fosco.
-  - Gráficos com colunas arredondadas.
-- **Clássico**: o visual da 1.1, com cantos retos, cabeçalho grafite sólido e botões chapados.
+- **Minimal**: feito para o tema [Minimal](https://github.com/kepano/obsidian-minimal).
+  - Tudo vem das variáveis do tema: fundo, texto, bordas, cor de destaque, fonte e raio dos cantos. Por isso acompanha o esquema de cores escolhido no Minimal (padrão, Nord, Atom e outros) e o modo **claro ou escuro** do Obsidian.
+  - Linguagem plana: bordas finas no lugar de brilhos, botões e abas sem caixa alta, pesos de fonte mais leves.
+  - A cor de destaque é a do Obsidian (*Aparência › Cor de destaque*), não o laranja.
+  - Também funciona em outros temas, se escolhido à mão.
 
-Os dois visuais têm ainda:
+Nos dois visuais:
 
-- **Obra-prima**: nota máxima (5 estrelas ou 10) ganha uma coroa dourada no card e o selo *Obra-prima* no destaque.
-- **Ranking**: os três primeiros aparecem em dourado.
-- **Cartão de membro** (Perfil): mostra o seu nível de fã pelas horas assistidas. Os níveis são Iniciante, Bronze (25 h), Prata (100 h), Ouro (300 h), Platina (750 h) e Diamante (1.500 h). O cartão traz dias, episódios, o ano em que você começou e quanto falta para o próximo nível. O nível também aparece no menu da conta.
+- **Favorito**: coração (o ícone de favoritar e o selo discreto no canto da capa).
+- **Obra-prima**: nota máxima (5 estrelas ou 10) ganha o selo *Obra-prima* no destaque.
+- **Cartão de membro** (Perfil): o seu nível de fã pelas horas assistidas. Os níveis são Iniciante, Bronze (25 h), Prata (100 h), Ouro (300 h), Platina (750 h) e Diamante (1.500 h), cada um com um ponto de cor. O cartão traz dias, episódios, o ano em que você começou e quanto falta para o próximo nível. O nível também aparece no menu da conta.
 
-Em *Style Settings › Anime Vault*: cor de ação (o degradê e o brilho acompanham), largura das capas nas fileiras, modo aplicativo e barra de rolagem. Em *Configurações* do app: visual, reduzir animações, sinopse no hover e vibração.
+Em *Style Settings › Anime Vault*: cor de ação do visual Vault, largura das capas nas fileiras, modo aplicativo e barra de rolagem. Em *Configurações* do app: visual, escala de notas, reduzir animações, sinopse no hover e vibração.
 
 ## Celular
 
@@ -144,6 +148,7 @@ Atalhos: `/` ou `Ctrl/Cmd + K` para buscar (Enter sem resultado busca no AniList
 | Bloco de código em vez da tela | Dataview sem *Enable JavaScript Queries*, ou nota em modo código-fonte |
 | Tela sem estilo | Snippet `animevault` desativado em *Aparência* |
 | Títulos com outra fonte | Sem internet, a Plus Jakarta Sans não carrega e os títulos usam a Lato |
+| Visual não mudou ao trocar para o Minimal | Em *Configurações › Visual*, deixe em **Automático** (ou escolha **Minimal**) |
 | Sem capas | Use *Configurações › Baixar capas e banners que faltam* (precisa de `anilistId`) |
 | "Esse perfil ou lista é privado" | A lista do AniList precisa ser pública para o sync |
 | "Nota MAL" em N/A | Falta `malId` ou ainda não foi atualizado: menu ⋮ › Atualizar do MyAnimeList |

@@ -5,7 +5,7 @@
 <h1 align="center">Anime Vault</h1>
 
 <p align="center">
-  <img alt="Versão" src="https://img.shields.io/badge/vers%C3%A3o-1.2.0-f47521?style=for-the-badge&labelColor=000000">
+  <img alt="Versão" src="https://img.shields.io/badge/vers%C3%A3o-1.3.0-f47521?style=for-the-badge&labelColor=000000">
   <img alt="Obsidian" src="https://img.shields.io/badge/Obsidian-desktop%20%C2%B7%20celular-7c3aed?style=for-the-badge&logo=obsidian&logoColor=white&labelColor=000000">
   <img alt="AniList" src="https://img.shields.io/badge/AniList-sem%20senha-3db4f2?style=for-the-badge&labelColor=000000">
   <img alt="MyAnimeList" src="https://img.shields.io/badge/MyAnimeList-XML%20%C2%B7%20Jikan-2e51a2?style=for-the-badge&labelColor=000000">
@@ -50,19 +50,19 @@
     <td valign="top">🏆 <b>Perfil, Ranking e XML</b><br><sub>"Anime Stats" no estilo MAL, seu top e o Top do MyAnimeList. Importe e exporte sua lista pelo XML oficial do MAL.</sub></td>
   </tr>
   <tr>
-    <td valign="top">✦ <b>Visual Premium</b><br><sub>Cabeçalho de vidro sobre o destaque, cantos arredondados, cards que sobem com brilho na cor da arte, menus e janelas em vidro fosco. O visual Clássico continua a um toque.</sub></td>
-    <td valign="top">👑 <b>Obras-primas em dourado</b><br><sub>Nota máxima ganha coroa no card e selo no destaque. O pódio do ranking também é dourado.</sub></td>
-    <td valign="top">💳 <b>Cartão de membro</b><br><sub>No Perfil, seu nível de fã pelas horas assistidas: Bronze, Prata, Ouro, Platina e Diamante, com a barra até o próximo.</sub></td>
+    <td valign="top">🌓 <b>Combina com o tema Minimal</b><br><sub>Com o Minimal ativo, o Vault adota as cores, a fonte e a cor de destaque do tema, no modo claro e no escuro. Nos outros temas, o visual Vault.</sub></td>
+    <td valign="top">✦ <b>Visual Vault</b><br><sub>Palco azul-grafite com cores vivas, cabeçalho de vidro sobre o destaque, cantos arredondados e cards que sobem com brilho na cor da arte.</sub></td>
+    <td valign="top">💳 <b>Cartão de membro</b><br><sub>No Perfil, seu nível de fã pelas horas assistidas (Bronze, Prata, Ouro, Platina, Diamante) e a barra até o próximo. Favoritos com coração.</sub></td>
   </tr>
 </table>
 
 <p align="center">
-  <img src=".github/readme/mobile.jpg" alt="Anime Vault no celular: Início, ficha, perfil e biblioteca" width="100%">
+  <img src=".github/readme/mobile.jpg" alt="Anime Vault no celular: visual Vault (Início e ficha) e visual Minimal (claro e escuro)" width="100%">
 </p>
 
 <p align="center">
-  <img src=".github/readme/desktop-anime.jpg" alt="Ficha do anime com selo de obra-prima e a grade de episódios" width="49%">
-  <img src=".github/readme/desktop-profile.jpg" alt="Perfil com o cartão de membro" width="49%">
+  <img src=".github/readme/desktop-anime.jpg" alt="Ficha do anime no visual Vault" width="49%">
+  <img src=".github/readme/desktop-minimal.jpg" alt="A mesma ficha no visual Minimal, modo claro" width="49%">
 </p>
 <p align="center"><sub>Prévias geradas com capas ilustrativas. No seu vault, capas e banners vêm do AniList.</sub></p>
 
